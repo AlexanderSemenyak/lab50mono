@@ -1,0 +1,4 @@
+usr/bin/smcs
+usr/lib/mono/2.1/smcs.exe*
+usr/lib/*/pkgconfig/smcs.pc
+usr/share/man/man1/smcs.1

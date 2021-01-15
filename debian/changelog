@@ -1,0 +1,11 @@
+mono (6.12.0.112-0labft2) UNRELEASED; urgency=medium
+
+  * Initial release.
+  * Dist clean pdb and exe files.
+  * Добавлены недостающие файлы тестовых утилит.
+  * Use system OpenSSL instead of BoringTLS.
+  * Dropped deprecated MCS compiler.
+  * Dropped deprecated XBuild.
+  * Сборка с помощью внешней утилиты jay.
+
+ -- Лаборатория 50 <team@lab50.net>  Fri, 18 Dec 2020 08:54:59 +0300

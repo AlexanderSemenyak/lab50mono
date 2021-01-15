@@ -1,0 +1,256 @@
+From: Debian Mono Group <pkg-mono-group@lists.alioth.debian.org>
+Date: Sun, 6 Dec 2020 19:51:11 +0300
+Subject: exclude-external-deps
+
+===================================================================
+---
+ configure.ac              | 33 ++++++++++++++++++++++++++-------
+ mcs/Makefile              |  6 +++---
+ mcs/build/executable.make |  4 ++++
+ mcs/build/library.make    |  9 +++++++++
+ mcs/class/Makefile        |  3 +--
+ mcs/errors/Makefile       |  8 +++++++-
+ mcs/tools/Makefile        |  4 ++--
+ mono/tests/Makefile.am    |  4 ++++
+ runtime/Makefile.am       |  2 +-
+ 9 files changed, 57 insertions(+), 16 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 6f406c2..3a487b8 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -915,6 +915,17 @@ CFLAGS="$WARN $CFLAGS -g"
+ CFLAGS_FOR_LIBGC="$CFLAGS_FOR_LIBGC -g"
+ CPPFLAGS="$WARN $CPPFLAGS -g"
+ 
++AC_ARG_WITH(system-mono, [  --with-system-mono=path      Use installed Mono instead of included binaries], [], [with_system_mono=no])
++if test "x$with_system_mono" != xno; then
++        if test "x$with_system_mono" = xyes; then
++                system_mono_path=/usr/lib/mono
++        elif test "x$with_system_mono" != xno; then
++                system_mono_path=$with_system_mono
++        fi
++        AC_SUBST([system_mono_path])
++fi
++AM_CONDITIONAL(USE_SYSTEM_MONO, test "x$with_system_mono" != x)
++
+ # Where's the 'mcs' source tree?
+ if test -d $srcdir/mcs; then
+   mcsdir=mcs
+@@ -6098,8 +6109,17 @@ fi
+ AC_SUBST(mono_runtime)
+ AC_SUBST(mono_runtime_wrapper)
+ 
+-CSC_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.6.0/csc.exe
+-VBCS_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.6.0/VBCSCompiler.exe
++if test $csc_compiler = roslyn; then
++        if test x$with_system_mono = xno; then
++                CSC_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.6.0/csc.exe
++                VBCS_LOCATION=`cd $srcdir && pwd`/external/roslyn-binaries/Microsoft.Net.Compilers/3.6.0/VBCSCompiler.exe
++        else
++                CSC_LOCATION=$system_mono_path/4.5/csc.exe
++                VBCS_LOCATION=$system_mono_path/4.5/VBCSCompiler.exe
++        fi
++        AC_CHECK_FILE([$CSC_LOCATION], [], [AC_MSG_ERROR([cound not find $CSC_LOCATION])])
++        AC_CHECK_FILE([$VBCS_LOCATION], [], [AC_MSG_ERROR([cound not find $VBCS_LOCATION])])
++fi
+ 
+ if test $csc_compiler = mcs; then
+   CSC=$mcs_topdir/class/lib/build/mcs.exe
+@@ -6753,11 +6773,6 @@ AC_SUBST(CPPFLAGS)
+ AC_SUBST(LDFLAGS)
+ AC_SUBST(ZLIB_CFLAGS)
+ 
+-# Update all submodules recursively to ensure everything is checked out
+-if test "x$with_core" != "xonly"; then
+-	(cd $srcdir && scripts/update_submodules.sh)
+-fi
+-
+ AC_MONO_OUTPUT()
+ 
+ if test x$host_win32 = xyes; then
+@@ -6796,6 +6811,10 @@ fi
+     echo "sysconfdir=$sysconfdir" >> $mcs_topdir/build/config.make
+     echo 'mono_libdir=${exec_prefix}/lib' >> $mcs_topdir/build/config.make
+     echo "mono_build_root=$mono_build_root" >> $mcs_topdir/build/config.make
++    if test x$with_system_mono != xno; then
++      echo "USE_SYSTEM_MONO=true" >> $mcs_topdir/build/config.make
++      echo "system_mono_path=$system_mono_path" >> $mcs_topdir/build/config.make
++    fi
+     echo "RUNTIME = $mono_build_root/runtime/mono-wrapper" >> $mcs_topdir/build/config.make
+     echo "JAY_CFLAGS = $JAY_CFLAGS" >> $mcs_topdir/build/config.make
+     echo "VERSION = $VERSION" >> $mcs_topdir/build/config.make
+diff --git a/mcs/Makefile b/mcs/Makefile
+index 42c4496..0964453 100644
+--- a/mcs/Makefile
++++ b/mcs/Makefile
+@@ -1,6 +1,6 @@
+ thisdir := .
+ 
+-SUBDIRS := build jay mcs class ilasm tools tests errors docs packages
++SUBDIRS := build jay mcs class ilasm tools tests errors docs
+ 
+ # Resgen is corlib specific tool
+ 
+@@ -19,7 +19,7 @@ testing_aot_full_interp_SUBDIRS := build class
+ testing_aot_hybrid_SUBDIRS := build class
+ testing_aot_full_SUBDIRS := build class
+ binary_reference_assemblies_SUBDIRS := build class
+-net_4_x_SUBDIRS := build class ilasm tools tests errors docs mcs class/aot-compiler packages
++net_4_x_SUBDIRS := build class ilasm tools tests errors docs mcs class/aot-compiler
+ xammac_net_4_5_SUBDIRS := build class
+ xbuild_12_SUBDIRS := build class tools/xbuild
+ xbuild_14_SUBDIRS := build class tools/xbuild
+@@ -44,7 +44,7 @@ dir-check:
+ 
+ # fun specialty targets
+ 
+-PROFILES = net_4_x binary_reference_assemblies xbuild_12 xbuild_14
++PROFILES = net_4_x xbuild_12 xbuild_14
+ 
+ .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
+ all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%
+diff --git a/mcs/build/executable.make b/mcs/build/executable.make
+index 29abac5..3fc63d0 100644
+--- a/mcs/build/executable.make
++++ b/mcs/build/executable.make
+@@ -49,7 +49,11 @@ ifdef TARGET_NET_REFERENCE
+ LIB_REFS_MONO = $(call _FILTER_OUT,System,$(call _FILTER_OUT,mscorlib,$(LIB_REFS_ALL)))
+ LIB_REFS_SYSTEM = $(filter-out $(LIB_REFS_MONO),$(LIB_REFS_ALL))
+ 
++ifdef USE_SYSTEM_MONO
++MCS_REFERENCES = $(patsubst %,-r:$(system_mono_path)/$(subst v,,$(TARGET_NET_REFERENCE))-api/%.dll,$(LIB_REFS_SYSTEM))
++else
+ MCS_REFERENCES = $(patsubst %,-r:$(topdir)/../external/binary-reference-assemblies/$(TARGET_NET_REFERENCE)/%.dll,$(LIB_REFS_SYSTEM))
++endif
+ MCS_REFERENCES += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_MONO))
+ else
+ MCS_REFERENCES = $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_ALL))
+diff --git a/mcs/build/library.make b/mcs/build/library.make
+index ca9b193..9f91b81 100644
+--- a/mcs/build/library.make
++++ b/mcs/build/library.make
+@@ -28,16 +28,25 @@ LIB_REFS_MONO_ALIAS = $(call _FILTER_OUT,System,$(LIB_REFS_ALIAS))
+ LIB_REFS_NET_FULL = $(filter-out $(LIB_REFS_MONO_FULL),$(LIB_REFS_FULL))
+ LIB_REFS_NET_ALIAS = $(filter-out $(LIB_REFS_MONO_ALIAS),$(LIB_REFS_ALIAS))
+ 
++ifdef USE_SYSTEM_MONO
++LIB_MCS_FLAGS += $(patsubst %,-r:$(system_mono_path)/$(subst v,,$(TARGET_NET_REFERENCE))-api/%.dll,$(LIB_REFS_NET_FULL))
++LIB_MCS_FLAGS += $(patsubst %,-r:%.dll, $(subst =,=$(system_mono_path)/$(subst v,,$(TARGET_NET_REFERENCE))-api/,$(LIB_REFS_NET_ALIAS)))
++else
+ LIB_MCS_FLAGS += $(patsubst %,-r:$(topdir)/../external/binary-reference-assemblies/$(TARGET_NET_REFERENCE)/%.dll,$(LIB_REFS_NET_FULL))
+ LIB_MCS_FLAGS += $(patsubst %,-r:%.dll, $(subst =,=$(topdir)/../external/binary-reference-assemblies/$(TARGET_NET_REFERENCE)/,$(LIB_REFS_NET_ALIAS)))
++endif
+ 
+ LIB_MCS_FLAGS += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_MONO_FULL))
+ LIB_MCS_FLAGS += $(patsubst %,-r:%.dll, $(subst =,=$(topdir)/class/lib/$(PROFILE_DIRECTORY)/,$(LIB_REFS_MONO_ALIAS)))
+ else
+ 
+ ifdef API_BIN_REFS
++ifdef USE_SYSTEM_MONO
++LIB_MCS_FLAGS += $(patsubst %,-r:$(system_mono_path)/$(subst v,,$(API_BIN_PROFILE))-api/%.dll,$(API_BIN_REFS))
++else
+ LIB_MCS_FLAGS += $(patsubst %,-r:$(topdir)/../external/binary-reference-assemblies/$(API_BIN_PROFILE)/%.dll,$(API_BIN_REFS))
+ endif
++endif
+ 
+ LIB_MCS_FLAGS += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_FULL))
+ LIB_MCS_FLAGS += $(patsubst %,-r:%.dll, $(subst =,=$(topdir)/class/lib/$(PROFILE_DIRECTORY)/,$(LIB_REFS_ALIAS)))
+diff --git a/mcs/class/Makefile b/mcs/class/Makefile
+index 1ab7f8b..41fea7f 100644
+--- a/mcs/class/Makefile
++++ b/mcs/class/Makefile
+@@ -385,7 +385,6 @@ net_4_x_parallel_dirs = \
+ 	Mono.Profiler.Log	\
+ 	Mono.Runtime.Tests	\
+ 	System.Runtime.CompilerServices.Unsafe \
+-	legacy/Mono.Cecil \
+ 	SystemWebTestShim \
+ 	$(xbuild_4_0_dirs)
+ 
+@@ -460,7 +459,7 @@ include ../build/rules.make
+ DIST_SUBDIRS = $(testing_aot_full_dirs_parallel) $(testing_aot_hybrid_dirs_parallel) $(monotouch_dirs_parallel) $(monotouch_tools_dirs_parallel) \
+ $(monodroid_dirs_parallel) $(monodroid_tools_dirs_parallel) $(xammac_dirs_parallel) $(net_4_x_dirs) $(net_4_x_parallel_dirs) \
+ $(xammac_4_5_dirs_parallel) $(unreal_dirs_parallel) $(wasm_dirs_parallel) $(wasm_tools_dirs_parallel) $(xbuild_14_SUBDIRS) \
+-$(testing_aot_full_interp_dirs_parallel) $(netcore_SUBDIRS) dlr aot-compiler reference-assemblies Facades
++$(testing_aot_full_interp_dirs_parallel) $(netcore_SUBDIRS) dlr aot-compiler Facades
+ 
+ # No new makefiles for: System.Messaging, System.Web.Mobile,
+ # System.ServiceProcess
+diff --git a/mcs/errors/Makefile b/mcs/errors/Makefile
+index dc1eb33..28ffa7b 100644
+--- a/mcs/errors/Makefile
++++ b/mcs/errors/Makefile
+@@ -39,6 +39,12 @@ TEST_SUPPORT_FILES = \
+ 
+ -include $(mcs_topdir)/build/config.make
+ 
++ifdef USE_SYSTEM_MONO
++systemdll = $(system_mono_path)/2.0-api/System.dll
++else
++systemdll = $(topdir)/../external/binary-reference-assemblies/v2.0/System.dll
++endif
++
+ # mention all targets
+ all-local $(STD_TARGETS:=-local):
+ 
+@@ -111,7 +117,7 @@ dlls/second/CS1703-lib.dll: dlls/second/CS1703-lib.cs
+ dlls/second/CS1705-lib.dll: dlls/second/CS1705-lib.cs
+ 	$(CSCOMPILE) /r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/mscorlib.dll /target:library /warn:0 /publicsign /keyfile:key.snk /out:$@ $<
+ 
+-dlls/cs1703-2/System.dll: $(topdir)/../external/binary-reference-assemblies/v2.0/System.dll
++dlls/cs1703-2/System.dll: $(systemdll)
+ 	mkdir -p $(dir $@)
+ 	cp $< $@
+ 
+diff --git a/mcs/tools/Makefile b/mcs/tools/Makefile
+index f774b6f..8818379 100644
+--- a/mcs/tools/Makefile
++++ b/mcs/tools/Makefile
+@@ -52,7 +52,7 @@ net_4_5_dirs := \
+ 	gacutil
+ 
+ build_SUBDIRS =
+-build_PARALLEL_SUBDIRS := resgen gacutil security culevel upload-to-sentry mono-helix-client commoncryptogenerator resx2sr linker cil-strip corcompare mono-api-diff mono-api-html
++build_PARALLEL_SUBDIRS := resgen gacutil security culevel upload-to-sentry commoncryptogenerator resx2sr linker cil-strip corcompare mono-api-diff mono-api-html
+ monodroid_tools_SUBDIRS =
+ monodroid_tools_PARALLEL_SUBDIRS = aprofutil cil-strip linker-analyzer mkbundle mdoc mono-symbolicate corcompare mono-api-diff mono-api-html pdb2mdb nunit-lite
+ monodroid_SUBDIRS = nunit-lite
+@@ -68,7 +68,7 @@ net_4_x_PARALLEL_SUBDIRS = $(net_4_5_dirs)
+ wasm_tools_SUBDIRS =
+ wasm_tools_PARALLEL_SUBDIRS = linker wasm-tuner cil-strip
+ 
+-DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry mono-helix-client
++DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry
+ 
+ include ../build/rules.make
+ 
+diff --git a/mono/tests/Makefile.am b/mono/tests/Makefile.am
+index 4c3e967..8606535 100755
+--- a/mono/tests/Makefile.am
++++ b/mono/tests/Makefile.am
+@@ -2956,7 +2956,11 @@ generic-delegate2.2.exe: $(srcdir)/generic-delegate2.2.cs generic-delegate2-lib.
+ 	$(MCS) -r:generic-delegate2-lib.2.dll -out:$@ $<
+ 
+ bug-3903.exe: bug-3903.cs
++if USE_SYSTEM_MONO
++	$(MCS_NO_LIB)  $(srcdir)/bug-3903.cs -nostdlib -r:$(system_mono_path)/2.0-api/mscorlib.dll -r:$(system_mono_path)/2.0-api/System.Core.dll -out:$@
++else
+ 	$(MCS_NO_LIB)  $(srcdir)/bug-3903.cs -nostdlib -r:$(srcdir)/../../external/binary-reference-assemblies/v2.0/mscorlib.dll -r:$(srcdir)/../../external/binary-reference-assemblies/v2.0/System.Core.dll -out:$@
++endif
+ 
+ EXTRA_DIST += appdomain-marshalbyref-assemblyload-MidAssembly.cs appdomain-marshalbyref-assemblyload-LeafAssembly.cs
+ 
+diff --git a/runtime/Makefile.am b/runtime/Makefile.am
+index 9e29cb5..b0bf0e7 100644
+--- a/runtime/Makefile.am
++++ b/runtime/Makefile.am
+@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper etc/mono/config
+ build_profiles = 
+ 
+ if INSTALL_4_x
+-build_profiles += binary_reference_assemblies net_4_x xbuild_12 xbuild_14
++build_profiles += net_4_x xbuild_12 xbuild_14
+ net_profile = net_4_x
+ endif
+ 

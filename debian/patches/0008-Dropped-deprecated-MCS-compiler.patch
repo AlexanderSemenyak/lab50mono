@@ -1,0 +1,29 @@
+From: =?utf-8?b?0JvQsNCx0L7RgNCw0YLQvtGA0LjRjyA1MA==?= <team@lab50.net>
+Date: Sat, 26 Dec 2020 11:11:48 +0300
+Subject: Dropped deprecated MCS compiler
+
+---
+ mcs/Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mcs/Makefile b/mcs/Makefile
+index 0964453..50c90b7 100644
+--- a/mcs/Makefile
++++ b/mcs/Makefile
+@@ -1,6 +1,6 @@
+ thisdir := .
+ 
+-SUBDIRS := build jay mcs class ilasm tools tests errors docs
++SUBDIRS := build jay class ilasm tools tests errors docs
+ 
+ # Resgen is corlib specific tool
+ 
+@@ -19,7 +19,7 @@ testing_aot_full_interp_SUBDIRS := build class
+ testing_aot_hybrid_SUBDIRS := build class
+ testing_aot_full_SUBDIRS := build class
+ binary_reference_assemblies_SUBDIRS := build class
+-net_4_x_SUBDIRS := build class ilasm tools tests errors docs mcs class/aot-compiler
++net_4_x_SUBDIRS := build class ilasm tools tests errors docs class/aot-compiler
+ xammac_net_4_5_SUBDIRS := build class
+ xbuild_12_SUBDIRS := build class tools/xbuild
+ xbuild_14_SUBDIRS := build class tools/xbuild

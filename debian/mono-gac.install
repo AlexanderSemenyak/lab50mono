@@ -1,0 +1,3 @@
+usr/bin/gacutil
+debian/MonoGetAssemblyName.exe /usr/share/mono/
+usr/share/man/man1/gacutil.1

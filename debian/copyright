@@ -1,0 +1,297 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Mono
+Source: https://github.com/mono/mono
+Files-Excluded: external/roslyn-binaries
+  external/api-snapshot
+  external/bdwgc
+  external/binary-reference-assemblies
+  external/bockbuild
+  external/boringssl
+  external/cecil-legacy
+  external/helix-binaries
+  external/illinker-test-assets
+  external/xunit-binaries
+  mcs/packages
+
+Files: *
+Copyright: © 2011-2020 Xamarin Inc (http://www.xamarin.com)
+License: MIT
+
+Files: debian/*
+Copyright: © 2002 Robert McQueen <robot101@debian.org>
+           © 2002-2003 Alp Toker <alp@atoker.com>
+           © 2004-2013 Mirco Bauer <meebey@debian.org>
+           © 2008-2010 Jo Shields <directhex@apebox.org>
+           © Лаборатория 50, 2020 <team@lab50.net>
+License: GPL
+
+Files: debian/detector/*
+Copyright: © Ilya Konstantinov <future@shiny.co.il>
+           © 2005 Colin Watson <cjwatson@debian.org>
+License: GPL-2
+
+Files: mono/benchmark/logic.cs, 
+       mcs/tools/prj2make/*, 
+       mcs/class/Compat.ICSharpCode.SharpZipLib/*, 
+       mcs/class/ICSharpCode.SharpZipLib/*
+Copyright: © 1998-2001 Free Software Foundation, Inc.
+           © 2001 Southern Storm Software, Pty Ltd.
+           © 2001-2005 Mike Krueger
+           © 2004 Francisco T. Martinez <paco@mfcon.com>
+           © 2004-2005 John Reilly
+License: GPL-2+
+
+Files: mcs/tools/pdb2mdb/*, 
+       mcs/class/dlr/*,
+       mcs/class/MicrosoftAjaxLibrary/*, 
+       mcs/class/System.Web.Mvc/*,
+       mcs/class/System.Web.Mvc2/*,
+       mono/docs/HtmlAgilityPack/*
+Copyright: © 2003 Ximian, Inc (http://www.ximian.com)
+           © 2007-2009 Microsoft Corporation
+           © 2009 Simon Mourier
+License: Ms-PL
+
+Files: mcs/tools/monodoc/Lucene.Net/*
+Copyright: © 2004 The Apache Software Foundation
+License: Apache-2.0
+
+Files: mcs/tools/csharp/repl.cs, 
+       mcs/mcs/*
+Copyright: © 2001-2003 Ximian, Inc (http://www.ximian.com)
+           © 2003-2009 Novell, Inc
+           © 2008 John Resig (jquery.com)
+License: MIT | GPL-2
+
+Files: mcs/class/ByteFX.Data/*, 
+       mcs/class/Npgsql/*
+Copyright: © 2001 Matthew S. Ford
+           © 2002-2004 ByteFX, Inc.
+           © 2002-2006 The Npgsql Development Team
+           © 2003 Pedro Martínez Juliá  <yoros@wanadoo.es>
+           © 2003 PostgreSQL Global Development Group
+           © 2003 PT Cakram Datalingga Duaribu (http://www.cdl2000.com)
+           © 2004 Emiliano Necciari
+           © 2004-2005 Novell, Inc (http://www.novell.com)
+           © 2004-2009 Rolf Bjarne Kvinge, RKvinge@novell.com
+License: LGPL-2.1+
+
+Files: mcs/tools/csharp/getline.cs
+Copyright: © 2008 Novell, Inc.
+License: MIT | Apache-2.0
+
+Files: mcs/tools/lc/*
+Copyright: © 2009 RemObjects Software
+           © 2008 Novell (http://www.novell.com)
+License: MIT
+
+Files: mcs/class/System.Web.Extensions/System.Web.Script.Serialization/JSON/*
+Copyright: © 2007 James Newton-King
+License: MIT
+
+Files: external/nunit-lite/*
+Copyright: © 2004-2013 Charlie Poole
+License: MIT
+
+Files: ikvm-native/*,
+       mono/io-layer/wapi_glob.*,
+       mono/utils/freebsd-*,
+       mcs/class/RabbitMQ.Client/docs/*
+Copyright: © 1989-1993 The Regents of the University of California.  All rights reserved.
+           © 1996-1998 John D. Polstra.
+           © 2004 Apple Computer, Inc.
+           © 2004 Jeroen Frijters
+           © 2004 The Mozilla Foundation
+           © 2009 AMQP Working Group
+License: BSD
+
+Files: mcs/class/Mono.CodeContracts/*
+Copyright: © 2010 Chris Bacon
+           © 2011 Alexander Chebaturkin
+License: MIT
+
+Files: mcs/class/Mono.Parallel/*
+Copyright: © 2008-2011 Jérémie "Garuma" Laval
+License: MIT
+
+Files: mcs/class/System.ComponentModel.Composition.4.5/*
+Copyright: © Microsoft Corporation.  All rights reserved.
+License: Ms-PL
+Comment:
+  This directory contains an import of Microsoft's Mananged Extensibility 2
+  Preview 4 as downloaded from: http://mef.codeplex.com/
+  Licensed under Ms-PL: http://mef.codeplex.com/license
+
+Files: mcs/class/System.Net.Http/*
+Copyright: © 2011-2012 Xamarin Inc (http://www.xamarin.com)
+License: MIT
+
+Files: mcs/class/System.Threading.Tasks.Dataflow/*
+Copyright: © 2011 Jérémie "garuma" Laval
+           © 2012 Petr Onderka
+License: MIT
+
+Files: mcs/class/System.Web.Mvc3/*
+       mcs/class/System.Json.Microsoft/*
+Copyright: © Microsoft Corporation. All rights reserved.
+License: Apache-2.0
+Comment:
+  This directory contains an import of Microsoft's ASP.NET MVC project:
+  http://aspnetwebstack.codeplex.com/
+  Licensed under Apache-2.0: http://aspnetwebstack.codeplex.com/license
+
+Files: mcs/class/System.Json.Microsoft/Test/*
+Copyright: © 2011 Xamarin, Inc.
+License: MIT
+
+Files: mcs/class/System/Mono.Net.Dns/*
+Copyright: © 2011 Gonzalo Paniagua Javier
+License: Apache-2.0
+
+Files: external/Newtonsoft.Json/*
+Copyright: © 2007 James Newton-King
+License: MIT
+
+Files: external/Newtonsoft.Json/Src/Newtonsoft.Json/Utilities/LinqBridge.cs
+Copyright: © 2007-2009 Atif Aziz, Joseph Albahari. All rights reserved.
+License: BSD
+
+Files: external/aspnetwebstack/*
+Copyright: © Microsoft Corporation.  All rights reserved.
+License: Apache-2.0
+
+Files: external/aspnetwebstack/test/System.Web.Helpers.Test/TestFiles/xhtml11-flat.dtd
+Copyright: © 1998-2000 World Wide Web Consortium
+License: other
+ Permission to use, copy, modify and distribute the XHTML DTD and its
+ accompanying documentation for any purpose and without fee is hereby
+ granted in perpetuity, provided that the above copyright notice and
+ this paragraph appear in all copies.  The copyright holders make no
+ representation about the suitability of the DTD for any purpose.
+
+ It is provided "as is" without expressed or implied warranty.
+
+Files: external/cecil/*
+Copyright: © 2002-2003 Ximian, Inc. http://www.ximian.com
+           © 2003 Motus Technologies Inc. (http://www.motus.com)
+           © 2004-2006 Novell Inc. (http://www.novell.com)
+           © 2008-2011 Jb Evain
+           © 2008 Juerg Billeter
+License: MIT
+
+Files: external/cecil/symbols/pdb/Microsoft.Cci.Pdb/*
+Copyright: © Microsoft. All rights reserved
+License: Ms-PL
+
+Files: external/entityframework/*
+Copyright: © Microsoft Open Technologies, Inc.  All rights reserved.
+License: Apache-2.0
+
+Files: external/ikvm/openjdk/*
+       external/ikvm/openjdk/java/awt/image/BufferedImage.java
+       external/ikvm/openjdk/java/awt/image/IndexColorModel.java
+       external/ikvm/openjdk/java/awt/GraphicsConfiguration.java
+       external/ikvm/runtime/fdlibm/*
+       external/ikvm/openjdk/sun/font/StrikeCache.java
+       external/ikvm/openjdk/sun/font/FontManager.java
+Copyright: © 1994-1997, 2003, 2006-2008, 2010-2012 Oracle and/or its affiliates. All rights reserved
+           © 1996, 1997 Taligent, Inc. - All Rights Reserved
+           © 1996-1999 IBM Corp. - All Rights Reserved
+           © 1999-2001, 2004-2006, 2008, 2011 Free Software Foundation, Inc
+           © 2002-2007, 2009 Jeroen Frijters
+           © 2007 Red Hat, Inc
+           © 2009-2012 Volker Berlin (i-net software)
+           © 2010-2011 Karsten Heinrich (i-net software)
+License: GPL-2
+
+Files: external/ikvm/openjdk/java/util/zip/*
+       external/ikvm/openjdk/java/awt/color/ICC_ColorSpace.java
+       external/ikvm/openjdk/java/awt/image/*
+       external/ikvm/openjdk/icedtea/jce/
+       external/ikvm/openjdk/gnu/java/*
+       external/ikvm/openjdk/sun/java2d/SunCompositeContext.java
+Copyright: © 1999-2005, 2011 Free Software Foundation, Inc
+License: GPL-2+
+
+Files: external/ikvm/openjdk/java/lang/LangHelper.java
+       external/ikvm/openjdk/java/util/zip/ClassStubZipEntry.java
+       external/ikvm/openjdk/java/net/SocketUtil.java
+       external/ikvm/openjdk/java/lang/ref/Reference.java
+       external/ikvm/openjdk/java/lang/VMSystemProperties.java
+       external/ikvm/openjdk/java/lang/LangHelper.java
+       external/ikvm/openjdk/java/lang/reflect/ReflectHelper.java
+       external/ikvm/openjdk/sun/net/www/protocol/ikvmres/Handler.java
+       external/ikvm/openjdk/sun/font/*
+       external/ikvm/openjdk/sun/java2d/*
+       external/ikvm/openjdk/sun/jdbc/odbc/*
+       external/ikvm/openjdk/sun/security/*
+       external/ikvm/openjdk/sun/awt/Win32FontManager.java
+       external/ikvm/openjdk/sun/awt/windows/WPrinterJob.java
+       external/ikvm/openjdk/sun/awt/IkvmDataTransferer.java
+       external/ikvm/openjdk/sun/awt/AppContextDC.java
+       external/ikvm/openjdk/sun/awt/image/GifImageDecoder.java
+       external/ikvm/openjdk/sun/awt/image/JPEGImageDecoder.java
+       external/ikvm/openjdk/sun/awt/image/IkvmImageDecoder.java
+       external/ikvm/openjdk/sun/awt/image/ImageRepresentation.java
+       external/ikvm/openjdk/sun/nio/ch/SelectionKeyImpl.java
+       external/ikvm/openjdk/sun/nio/fs/NetFileSystemProvider.java
+       external/ikvm/openjdk/sun/nio/fs/DefaultFileSystemProvider.java
+       external/ikvm/openjdk/sun/nio/fs/DefaultFileTypeDetector.java
+       external/ikvm/openjdk/sun/nio/fs/NetFileSystem.java
+       external/ikvm/openjdk/sun/nio/fs/NetPath.java
+       external/ikvm/openjdk/sun/misc/Unsafe.java
+       external/ikvm/openjdk/sun/misc/MiscHelper.java
+       external/ikvm/openjdk/sun/print/PrintPeer.java
+       external/ikvm/openjdk/sun/print/UnixPrintServiceLookup.java
+       external/ikvm/openjdk/sun/print/Win32PrintJob.java
+       external/ikvm/openjdk/sun/print/Win32PrintServiceLookup.java
+       external/ikvm/openjdk/sun/management/FileSystemImpl.java
+       external/ikvm/openjdk/com/sun/imageio/plugins/jpeg/JPEGImageWriter.java
+       external/ikvm/openjdk/com/sun/imageio/plugins/jpeg/JPEGImageReader.java
+       external/ikvm/openjdk/com/sun/management/OperatingSystem.java
+       external/ikvm/openjdk/ikvm/awt/IkvmToolkit.java
+       external/ikvm/openjdk/ikvm/internal/*
+       external/ikvm/openjdk/ExtensionAttribute.java
+       external/ikvm/openjdk/GenerateSystemCore.cs
+       external/ikvm/classpath/sun/misc/Ref.java
+       external/ikvm/classpath/ikvm/*
+       external/ikvm/classpath/gnu/*
+       external/ikvm/runtime/*
+       external/ikvm/debugger/*
+       external/ikvm/ikvm/*
+       external/ikvm/ikvmstub/*
+       external/ikvm/ikvmc/*
+       external/ikvm/awt/*
+       external/ikvm/tools/*
+       external/ikvm/msbuild/*
+       external/ikvm/reflect/*
+       external/ikvm/native/*
+Copyright: © 2002-2013 Jeroen Frijters
+           © 2006-2013 Volker Berlin (i-net software)
+           © 2006 Active Endpoints, Inc
+           © 2010-2011 Karsten Heinrich (i-net software)
+           © 2011 Trevor Bell (Siemens Energy, Inc.)
+           © 2011 Marek Safar
+License: zlib/libpng
+
+Files: external/rx/*
+Copyright: Microsoft Open Technologies, Inc. All rights reserved
+License: Apache-2.0
+Comment:
+  This directory contains an import of Microsoft's Reactive Extensions project:
+  http://rx.codeplex.com/
+  Licensed under Apache-2.0: http://rx.codeplex.com/license
+
+Files: support/*
+Copyright: © 1995-2006 Mark Adler
+           © 1995-2006 Jean-loup Gailly.
+           © 1998-2005 Gilles Vollant
+           © 2004-2006 Jonathan Pryor
+           © 2005 Daniel Drake
+           © 2005-2009 Novell, Inc.
+License: zlib/libpng
+
+Files: support/minizip/*
+Copyright: © 1990-2000 Info-ZIP.  All rights reserved.
+           © 1998-2005 Gilles Vollant
+License: zlib/libpng

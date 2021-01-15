@@ -1,0 +1,20 @@
+From: =?utf-8?b?0JvQsNCx0L7RgNCw0YLQvtGA0LjRjyA1MA==?= <team@lab50.net>
+Date: Sat, 26 Dec 2020 11:13:50 +0300
+Subject: Dropped deprecated xbuild
+
+---
+ mcs/tools/Makefile | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/mcs/tools/Makefile b/mcs/tools/Makefile
+index 8818379..2c9c7cf 100644
+--- a/mcs/tools/Makefile
++++ b/mcs/tools/Makefile
+@@ -12,7 +12,6 @@ net_4_5_dirs := \
+ 	mono-xsd	\
+ 	resgen		\
+ 	wsdl		\
+-	xbuild		\
+ 	csharp		\
+ 	corcompare	\
+ 	mono-api-diff \
