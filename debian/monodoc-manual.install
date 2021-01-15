@@ -1,0 +1,4 @@
+usr/lib/monodoc/monodoc.xml
+usr/lib/monodoc/sources/*.source
+usr/lib/monodoc/sources/*.tree
+usr/lib/monodoc/sources/*.zip

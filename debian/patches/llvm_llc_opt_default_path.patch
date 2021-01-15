@@ -1,0 +1,21 @@
+From: Debian Mono Group <pkg-mono-group@lists.alioth.debian.org>
+Date: Sun, 6 Dec 2020 19:51:10 +0300
+Subject: llvm_llc_opt_default_path
+
+---
+ mono/mini/aot-compiler.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mono/mini/aot-compiler.c b/mono/mini/aot-compiler.c
+index 7534977..4fcf12a 100644
+--- a/mono/mini/aot-compiler.c
++++ b/mono/mini/aot-compiler.c
+@@ -13565,7 +13565,7 @@ mono_compile_assembly (MonoAssembly *ass, guint32 opts, const char *aot_options,
+ #endif
+ 	acfg->aot_opts.nunbox_arbitrary_trampolines = 256;
+ 	if (!acfg->aot_opts.llvm_path)
+-		acfg->aot_opts.llvm_path = g_strdup ("");
++		acfg->aot_opts.llvm_path = g_strdup ("/usr/lib/mono/llvm/bin/");
+ 	acfg->aot_opts.temp_path = g_strdup ("");
+ #ifdef MONOTOUCH
+ 	acfg->aot_opts.use_trampolines_page = TRUE;

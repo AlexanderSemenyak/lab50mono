@@ -1,0 +1,11 @@
+llvm_llc_opt_default_path.patch
+fix-distclean-target.patch
+fix-relocdir.patch
+exclude-external-deps.patch
+fix-tests.patch
+0006-Add-missing-callspec.cs-file.patch
+0007-Using-system-OpenSSL-instead-of-BoringSSL.patch
+0008-Dropped-deprecated-MCS-compiler.patch
+0008-Using-external-jay-tool.patch
+0009-Dropped-deprecated-xbuild.patch
+0010-Conditional-boehm-build.patch

@@ -1,0 +1,84 @@
+From: Debian Mono Group <pkg-mono-group@lists.alioth.debian.org>
+Date: Sun, 6 Dec 2020 19:51:10 +0300
+Subject: fix-distclean-target
+
+===================================================================
+---
+ mono/benchmark/Makefile.am | 2 ++
+ mono/mini/Makefile.am      | 9 +++++----
+ mono/mini/Makefile.am.in   | 6 +++---
+ mono/tests/Makefile.am     | 2 +-
+ 4 files changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/mono/benchmark/Makefile.am b/mono/benchmark/Makefile.am
+index ef6c05b..d15a4ad 100644
+--- a/mono/benchmark/Makefile.am
++++ b/mono/benchmark/Makefile.am
+@@ -52,6 +52,8 @@ TESTSI=$(TESTSI_TMP:.il=.exe)
+ 
+ EXTRA_DIST=test-driver $(TESTSRC)
+ 
++CLEANFILES = $(TESTSRC:.cs=.pdb) $(TESTSRC:.il=.pdb) *.exe
++
+ %.exe: %.il
+ 	$(ILASM) $< /OUTPUT=$@
+ 
+diff --git a/mono/mini/Makefile.am b/mono/mini/Makefile.am
+index c193c9c..df7b050 100644
+--- a/mono/mini/Makefile.am
++++ b/mono/mini/Makefile.am
+@@ -43,15 +43,16 @@ sgen_libs = \
+ 
+ if ENABLE_LLVM
+ 
+-include $(mono_build_root)/llvm/llvm_config.mk
++-include $(mono_build_root)/llvm/llvm_config.mk
+ LLVM_CFLAGS=$(LLVM_CFLAGS_INTERNAL) $(LLVM_CFLAGS_EXTERNAL)
+ LLVM_CXXFLAGS=$(LLVM_CXXFLAGS_INTERNAL) $(LLVM_CXXFLAGS_EXTERNAL)
+ LLVM_LDFLAGS=$(LLVM_LDFLAGS_INTERNAL) $(LLVM_LDFLAGS_EXTERNAL)
+ LLVM_LIBS=$(LLVM_LIBS_INTERNAL) $(LLVM_LIBS_EXTERNAL)
+ 
+-$(mono_build_root)/llvm/llvm_config.mk:
+-	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
+-
++#$(mono_build_root)/llvm/llvm_config.mk:
++#ifneq (,"$(wildcard $(top_builddir)/llvm/Makefile)")
++#	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
++#endif
+ endif
+ 
+ endif # !ENABLE_MSVC_ONLY
+diff --git a/mono/mini/Makefile.am.in b/mono/mini/Makefile.am.in
+index c193c9c..fb033b0 100755
+--- a/mono/mini/Makefile.am.in
++++ b/mono/mini/Makefile.am.in
+@@ -43,14 +43,14 @@ sgen_libs = \
+ 
+ if ENABLE_LLVM
+ 
+-include $(mono_build_root)/llvm/llvm_config.mk
++-include $(mono_build_root)/llvm/llvm_config.mk
+ LLVM_CFLAGS=$(LLVM_CFLAGS_INTERNAL) $(LLVM_CFLAGS_EXTERNAL)
+ LLVM_CXXFLAGS=$(LLVM_CXXFLAGS_INTERNAL) $(LLVM_CXXFLAGS_EXTERNAL)
+ LLVM_LDFLAGS=$(LLVM_LDFLAGS_INTERNAL) $(LLVM_LDFLAGS_EXTERNAL)
+ LLVM_LIBS=$(LLVM_LIBS_INTERNAL) $(LLVM_LIBS_EXTERNAL)
+ 
+-$(mono_build_root)/llvm/llvm_config.mk:
+-	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
++#$(mono_build_root)/llvm/llvm_config.mk:
++#	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
+ 
+ endif
+ 
+diff --git a/mono/tests/Makefile.am b/mono/tests/Makefile.am
+index 929e9db..4c3e967 100755
+--- a/mono/tests/Makefile.am
++++ b/mono/tests/Makefile.am
+@@ -3313,6 +3313,6 @@ Mono.Runtime.Testing.dll: weakattribute.cs
+ weak-fields.exe: weak-fields.cs Mono.Runtime.Testing.dll
+ 	$(MCS) -r:Mono.Runtime.Testing.dll -r:$(CLASS)/System.dll -r:$(CLASS)/System.Xml.dll -r:$(CLASS)/System.Core.dll -r:TestDriver.dll $(TEST_DRIVER_HARD_KILL_FEATURE) -out:$@ $<
+ 
+-CLEANFILES = $(TESTS_REGULAR) $(TESTS_STRESS) $(TESTSAOT_CS) $(TESTSAOT_IL) $(TESTSAOT_BENCH) $(TESTSAOT_STRESS) *.dll *.stdout *.aotlog *.exe stest.dat LeafAssembly.dll MidAssembly.dll appdomain-marshalbyref-assemblyload2/*.dll 
++CLEANFILES = $(TESTS_REGULAR) $(TESTS_STRESS) $(TESTSAOT_CS) $(TESTSAOT_IL) $(TESTSAOT_BENCH) $(TESTSAOT_STRESS) *.dll *.stdout *.aotlog *.exe stest.dat LeafAssembly.dll MidAssembly.dll appdomain-marshalbyref-assemblyload2/*.dll *.pdb testing_gac/*.exe testing_gac/*.pdb
+ CLEANFILES += $(TESTS_TAILCALL_COMPILE) $(TESTSAOT_TAILCALL)
+ CLEANFILES += $(BUILT_SOURCES)

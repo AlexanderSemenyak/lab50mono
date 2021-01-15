@@ -1,0 +1,4 @@
+usr/bin/mcs usr/bin/mono-csc
+usr/share/man/man1/monop.1 usr/share/man/man1/monop2.1
+usr/share/man/man1/resgen.1 usr/share/man/man1/resgen2.1
+usr/share/man/man1/wsdl.1 usr/share/man/man1/wsdl2.1

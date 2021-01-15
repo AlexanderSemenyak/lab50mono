@@ -1,0 +1,22 @@
+From: Debian Mono Group <pkg-mono-group@lists.alioth.debian.org>
+Date: Sun, 6 Dec 2020 19:51:11 +0300
+Subject: fix-relocdir
+
+===================================================================
+---
+ mono/metadata/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mono/metadata/Makefile.am b/mono/metadata/Makefile.am
+index dc9cf2a..682347c 100644
+--- a/mono/metadata/Makefile.am
++++ b/mono/metadata/Makefile.am
+@@ -125,7 +125,7 @@ mono-config-dirs.lo: Makefile
+ libmonoruntime_config_la_SOURCES = \
+ 	mono-config-dirs.h		\
+ 	mono-config-dirs.c
+-libmonoruntime_config_la_CPPFLAGS = $(AM_CPPFLAGS) -DMONO_BINDIR=\"$(bindir)/\" -DMONO_ASSEMBLIES=\"$(assembliesdir)\" -DMONO_CFG_DIR=\"$(confdir)\" -DMONO_RELOC_LIBDIR=\"../$(reloc_libdir)\" @CXX_ADD_CFLAGS@
++libmonoruntime_config_la_CPPFLAGS = $(AM_CPPFLAGS) -DMONO_BINDIR=\"$(bindir)/\" -DMONO_ASSEMBLIES=\"$(assembliesdir)\" -DMONO_CFG_DIR=\"$(confdir)\" -DMONO_RELOC_LIBDIR=\"$(reloc_libdir)\" @CXX_ADD_CFLAGS@
+ 
+ #
+ # Support is a separate library because it is not valid C++.

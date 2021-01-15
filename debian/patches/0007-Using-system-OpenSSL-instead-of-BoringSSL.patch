@@ -1,0 +1,1438 @@
+From: =?utf-8?b?0JvQsNCx0L7RgNCw0YLQvtGA0LjRjyA1MA==?= <team@lab50.net>
+Date: Fri, 18 Dec 2020 08:51:47 +0300
+Subject: Using system OpenSSL instead of BoringSSL
+
+---
+ configure.ac                      |  10 ++
+ mono/btls/Makefile.am             |  23 ++++-
+ mono/btls/btls-bio.c              |  52 +++++++---
+ mono/btls/btls-error.c            |   3 +
+ mono/btls/btls-error.h            |   1 -
+ mono/btls/btls-key.c              |  25 ++++-
+ mono/btls/btls-key.h              |   2 +-
+ mono/btls/btls-pkcs12.c           |  33 +++++++
+ mono/btls/btls-ssl-ctx.c          |  74 ++++++++++-----
+ mono/btls/btls-ssl.c              |  38 +++++++-
+ mono/btls/btls-ssl.h              |  12 +++
+ mono/btls/btls-util.c             |   8 ++
+ mono/btls/btls-util.h             |  18 ++++
+ mono/btls/btls-x509-lookup-mono.c |  39 ++++----
+ mono/btls/btls-x509-lookup.c      |  20 ++--
+ mono/btls/btls-x509-name.c        |  37 ++++++--
+ mono/btls/btls-x509-revoked.c     |  23 ++++-
+ mono/btls/btls-x509-store-ctx.c   |  22 ++++-
+ mono/btls/btls-x509-store.c       |   8 +-
+ mono/btls/btls-x509.c             |  51 +++++-----
+ mono/btls/hexdump.c               | 194 ++++++++++++++++++++++++++++++++++++++
+ 21 files changed, 570 insertions(+), 123 deletions(-)
+ create mode 100644 mono/btls/hexdump.c
+
+diff --git a/configure.ac b/configure.ac
+index 3a487b8..c318145 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -5858,6 +5858,7 @@ AC_ARG_WITH(btls_android_ndk, [  --with-btls-android-ndk        Android NDK for
+ AC_ARG_WITH(btls_android_api, [  --with-btls-android-api        Android NDK API level for BTLS build])
+ AC_ARG_WITH(btls_android_cmake_toolchain, [  --with-btls-android-cmake-toolchain        Path to the cmake toolchain file for Android])
+ AC_ARG_WITH(btls_android_ndk_asm_workaround, [  --with-btls-android-ndk-asm-workaround        Work around a problem with NDK r18+ clang compiler when compiling some AES assembly for ARM])
++AC_ARG_WITH(openssl, [ --with-openssl        Use OpenSSL instead of BoringSSL])
+ 
+ if test "x$with_btls_android_api" = "x" ; then
+ 	case "$BTLS_PLATFORM" in
+@@ -6013,6 +6014,13 @@ fi
+ 
+ AM_CONDITIONAL(BTLS_ANDROID, test x$btls_android = xyes)
+ 
++if test "x$with_openssl" = "xyes"; then
++        PKG_CHECK_MODULES([OPENSSL], [openssl],,[AC_MSG_FAILURE("OpenSSL not found")])
++        enable_btls_lib=no
++	AC_DEFINE(HAVE_BTLS, 1, [BoringTls is supported])
++fi
++AM_CONDITIONAL(OPENSSL, test "x$with_openssl" = "xyes")
++
+ ## Maybe should also disable if mcsdir is invalid.  Let's punt the issue for now.
+ AM_CONDITIONAL(BUILD_MCS, [test x$cross_compiling = xno && test x$enable_mcs_build != xno])
+ AM_CONDITIONAL(BUILD_SUPPORT, [test x$enable_support_build != xno])
+@@ -6979,6 +6987,8 @@ btls_platform_string=
+ if test x$enable_btls = xyes; then
+ 	if test x$btls_android = xyes; then
+ 		btls_platform_string=" (android:$BTLS_PLATFORM)"
++        elif test "x$with_openssl" = "xyes"; then
++                btls_platform_string=" (OpenSSL)"
+ 	else
+ 		btls_platform_string=" ($BTLS_PLATFORM)"
+ 	fi
+diff --git a/mono/btls/Makefile.am b/mono/btls/Makefile.am
+index 9a38544..392e4fc 100644
+--- a/mono/btls/Makefile.am
++++ b/mono/btls/Makefile.am
+@@ -33,11 +33,26 @@ MONO_BTLS_SOURCES_FILES = \
+ 	btls-x509-store-ctx.h \
+ 	btls-x509-store.h \
+ 	btls-x509-verify-param.c \
+-	btls-x509-verify-param.h \
+-	CMakeLists.txt
++	btls-x509-verify-param.h
++
++if OPENSSL
++MONO_BTLS_SOURCES_FILES += hexdump.c
++else
++MONO_BTLS_SOURCES_FILES += CMakeLists.txt
++endif
+ 
+ EXTRA_DIST = $(MONO_BTLS_SOURCES_FILES)
+ 
++if OPENSSL
++
++lib_LTLIBRARIES = libmono-btls-shared.la
++libmono_btls_shared_la_SOURCES = $(MONO_BTLS_SOURCES_FILES)
++libmono_btls_shared_la_CPPFLAGS = $(AM_CPPFLAGS) -DWITH_OPENSSL
++libmono_btls_shared_la_LDFLAGS = -no-undefined
++libmono_btls_shared_la_LIBADD = $(OPENSSL_LIBS)
++
++else # OpenSSL
++
+ CMAKE_VERBOSE=$(if $(V),VERBOSE=1,)
+ NINJA_VERBOSE=$(if ($V),-v,)
+ 
+@@ -48,7 +63,7 @@ CMAKE_MAKE_PROGRAM = $(shell which ninja-build || which ninja)
+ else
+ NINJA_ARGS =
+ BUILDFILE = Makefile
+-CMAKE_MAKE_PROGRAM = $(shell which gmake || which gnumake || which make)
++CMAKE_MAKE_PROGRAM = $(MAKE_COMMAND)
+ endif
+ 
+ CMAKE_ARGS = -D CMAKE_MAKE_PROGRAM="$(CMAKE_MAKE_PROGRAM)" -D CMAKE_INSTALL_PREFIX:PATH="$(prefix)" -D BTLS_ROOT:PATH="$(BTLS_ROOT)" \
+@@ -71,6 +86,8 @@ endif
+ clean-local:
+ 	-rm -rf build-shared
+ 
++endif # OpenSSL
++
+ install-exec-local:
+ 	mkdir -p "$(DESTDIR)$(libdir)"
+ if HOST_WIN32
+diff --git a/mono/btls/btls-bio.c b/mono/btls/btls-bio.c
+index 60259d9..a511f76 100644
+--- a/mono/btls/btls-bio.c
++++ b/mono/btls/btls-bio.c
+@@ -11,6 +11,11 @@
+ #include "../utils/mono-errno.h"
+ #include <errno.h>
+ 
++#ifdef WITH_OPENSSL
++void BIO_print_errors(BIO *bio);
++int BIO_hexdump(BIO *bio, const uint8_t *data, size_t len, unsigned indent);
++#endif
++
+ struct MonoBtlsBio {
+ 	const void *instance;
+ 	MonoBtlsReadFunc read_func;
+@@ -32,7 +37,7 @@ mono_debug (const char *message)
+ static int
+ mono_read (BIO *bio, char *out, int outl)
+ {
+-	MonoBtlsBio *mono = (MonoBtlsBio *)bio->ptr;
++	MonoBtlsBio *mono = (MonoBtlsBio *)BIO_get_data(bio);
+ 	int ret, wantMore;
+ 
+ 	if (!mono)
+@@ -59,7 +64,7 @@ mono_read (BIO *bio, char *out, int outl)
+ static int
+ mono_write (BIO *bio, const char *in, int inl)
+ {
+-	MonoBtlsBio *mono = (MonoBtlsBio *)bio->ptr;
++	MonoBtlsBio *mono = (MonoBtlsBio *)BIO_get_data(bio);
+ 
+ 	if (!mono)
+ 		return -1;
+@@ -70,7 +75,7 @@ mono_write (BIO *bio, const char *in, int inl)
+ static long
+ mono_ctrl (BIO *bio, int cmd, long num, void *ptr)
+ {
+-	MonoBtlsBio *mono = (MonoBtlsBio *)bio->ptr;
++	MonoBtlsBio *mono = (MonoBtlsBio *)BIO_get_data(bio);
+ 
+ 	if (!mono)
+ 		return -1;
+@@ -89,9 +94,9 @@ static int
+ mono_new (BIO *bio)
+ {
+ 	// mono_debug("mono_new!\n");
+-	bio->init = 0;
+-	bio->num = -1;
+-	bio->flags = 0;
++	BIO_set_init(bio, 0);
++	//bio->num = -1;
++	BIO_clear_flags(bio, INT_MAX);
+ 	return 1;
+ }
+ 
+@@ -99,10 +104,10 @@ static int
+ mono_free (BIO *bio)
+ {
+ 	// mono_debug ("mono_free!\n");
+-	if (bio->ptr) {
+-		MonoBtlsBio *mono = (MonoBtlsBio *)bio->ptr;
++	if (BIO_get_data(bio)) {
++		MonoBtlsBio *mono = (MonoBtlsBio *)BIO_get_data(bio);
+ 
+-		bio->ptr = NULL;
++		BIO_set_data(bio, NULL);
+ 		mono->instance = NULL;
+ 		mono->read_func = NULL;
+ 		mono->write_func = NULL;
+@@ -112,31 +117,50 @@ mono_free (BIO *bio)
+ 	return 1;
+ }
+ 
++#ifndef WITH_OPENSSL
+ static const BIO_METHOD mono_method = {
+ 	BIO_TYPE_NONE, "mono", mono_write, mono_read,
+ 	NULL, NULL, mono_ctrl, mono_new, mono_free, NULL
+ };
++#endif
+ 
+ BIO *
+ mono_btls_bio_mono_new (void)
+ {
++#ifdef WITH_OPENSSL
++	BIO_METHOD *bio;
++#else
+ 	BIO *bio;
++#endif
+ 	MonoBtlsBio *monoBio;
+ 
++#ifdef WITH_OPENSSL
++	bio = BIO_meth_new(BIO_TYPE_NONE, "mono");
++	BIO_meth_set_read(bio, mono_read);
++	BIO_meth_set_ctrl(bio, mono_ctrl);
++	BIO_meth_set_write(bio, mono_write);
++	BIO_meth_set_create(bio, mono_new);
++	BIO_meth_set_destroy(bio, mono_free);
++#else // WITH_OPENSSL
+ 	bio = BIO_new (&mono_method);
++#endif
+ 	if (!bio)
+ 		return NULL;
+ 
+ 	monoBio = calloc (1, sizeof (MonoBtlsBio));
+ 	if (!monoBio) {
++#ifdef WITH_OPENSSL
++		BIO_meth_free (bio);
++#else
+ 		BIO_free (bio);
++#endif
+ 		return NULL;
+ 	}
+ 
+-	bio->ptr = monoBio;
+-	bio->init = 0;
++	BIO_set_data((BIO*)bio, monoBio);
++	BIO_set_init((BIO*)bio, 0);
+ 
+-	return bio;
++	return (BIO*)bio;
+ }
+ 
+ void
+@@ -144,14 +168,14 @@ mono_btls_bio_mono_initialize (BIO *bio, const void *instance,
+ 			      MonoBtlsReadFunc read_func, MonoBtlsWriteFunc write_func,
+ 			      MonoBtlsControlFunc control_func)
+ {
+-	MonoBtlsBio *monoBio = bio->ptr;
++	MonoBtlsBio *monoBio = (MonoBtlsBio*)BIO_get_data(bio);
+ 
+ 	monoBio->instance = instance;
+ 	monoBio->read_func = read_func;
+ 	monoBio->write_func = write_func;
+ 	monoBio->control_func = control_func;
+ 
+-	bio->init = 1;
++	BIO_set_init(bio, 1);
+ }
+ 
+ int
+diff --git a/mono/btls/btls-error.c b/mono/btls/btls-error.c
+index 1825bce..c326b52 100644
+--- a/mono/btls/btls-error.c
++++ b/mono/btls/btls-error.c
+@@ -8,6 +8,9 @@
+ 
+ #include "btls-error.h"
+ #include <assert.h>
++#ifdef WITH_OPENSSL
++#include <openssl/err.h>
++#endif
+ 
+ int
+ mono_btls_error_peek_error (void)
+diff --git a/mono/btls/btls-error.h b/mono/btls/btls-error.h
+index c69ac29..9435a6b 100644
+--- a/mono/btls/btls-error.h
++++ b/mono/btls/btls-error.h
+@@ -12,7 +12,6 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+-#include <openssl/ssl.h>
+ #include "btls-util.h"
+ 
+ MONO_API int
+diff --git a/mono/btls/btls-key.c b/mono/btls/btls-key.c
+index f7e6771..8f08414 100644
+--- a/mono/btls/btls-key.c
++++ b/mono/btls/btls-key.c
+@@ -9,7 +9,7 @@
+ #include "btls-key.h"
+ 
+ EVP_PKEY *
+-mono_btls_key_new ()
++mono_btls_key_new (void)
+ {
+ 	return EVP_PKEY_new ();
+ }
+@@ -23,7 +23,12 @@ mono_btls_key_free (EVP_PKEY *pkey)
+ EVP_PKEY *
+ mono_btls_key_up_ref (EVP_PKEY *pkey)
+ {
++#ifdef WITH_OPENSSL
++	EVP_PKEY_up_ref (pkey);
++	return pkey;
++#else
+ 	return EVP_PKEY_up_ref (pkey);
++#endif
+ }
+ 
+ int
+@@ -35,15 +40,20 @@ mono_btls_key_get_bits (EVP_PKEY *pkey)
+ int
+ mono_btls_key_is_rsa (EVP_PKEY *pkey)
+ {
+-	return pkey->type == EVP_PKEY_RSA;
++	return EVP_PKEY_id(pkey) == EVP_PKEY_RSA;
+ }
+ 
+ int
+ mono_btls_key_assign_rsa_private_key (EVP_PKEY *pkey, uint8_t *der_data, int der_length)
+ {
+ 	RSA *rsa;
++#ifdef WITH_OPENSSL
++	const unsigned char *buf = der_data;
+ 
++	rsa = d2i_RSAPrivateKey(NULL, &buf, der_length);
++#else
+ 	rsa = RSA_private_key_from_bytes (der_data, der_length);
++#endif
+ 	if (!rsa)
+ 		return 0;
+ 
+@@ -53,24 +63,31 @@ mono_btls_key_assign_rsa_private_key (EVP_PKEY *pkey, uint8_t *der_data, int der
+ int
+ mono_btls_key_get_bytes (EVP_PKEY *pkey, uint8_t **buffer, int *size, int include_private_bits)
+ {
+-	size_t len;
++	size_t len = 0;
+ 	RSA *rsa;
+ 	int ret;
+ 
+ 	*size = 0;
+ 	*buffer = NULL;
+ 
+-	if (pkey->type != EVP_PKEY_RSA)
++	if (EVP_PKEY_id(pkey) != EVP_PKEY_RSA)
+ 		return 0;
+ 
+ 	rsa = EVP_PKEY_get1_RSA (pkey);
+ 	if (!rsa)
+ 		return 0;
+ 
++#ifdef WITH_OPENSSL
++	if (include_private_bits)
++		ret = i2d_RSAPrivateKey(rsa, buffer);
++	else
++		ret = i2d_RSAPublicKey(rsa, buffer);
++#else
+ 	if (include_private_bits)
+ 		ret = RSA_private_key_to_bytes (buffer, &len, rsa);
+ 	else
+ 		ret = RSA_public_key_to_bytes (buffer, &len, rsa);
++#endif
+ 
+ 	RSA_free (rsa);
+ 
+diff --git a/mono/btls/btls-key.h b/mono/btls/btls-key.h
+index 054aafb..0c98f27 100644
+--- a/mono/btls/btls-key.h
++++ b/mono/btls/btls-key.h
+@@ -14,7 +14,7 @@
+ #include "btls-x509.h"
+ 
+ MONO_API EVP_PKEY *
+-mono_btls_key_new ();
++mono_btls_key_new (void);
+ 
+ MONO_API void
+ mono_btls_key_free (EVP_PKEY *pkey);
+diff --git a/mono/btls/btls-pkcs12.c b/mono/btls/btls-pkcs12.c
+index 530ede6..408bbe5 100644
+--- a/mono/btls/btls-pkcs12.c
++++ b/mono/btls/btls-pkcs12.c
+@@ -131,6 +131,33 @@ mono_btls_pkcs12_add_cert (MonoBtlsPkcs12 *pkcs12, X509 *x509)
+ 	sk_X509_push (pkcs12->certs, x509);
+ }
+ 
++#ifdef WITH_OPENSSL
++static int
++btls_pkcs12_import (MonoBtlsPkcs12 *pkcs12, const void *data, int len, const char *btls_password)
++{
++	int ret;
++	PKCS12 *p12;
++	X509 *x509_cert;
++
++	p12 = d2i_PKCS12(NULL, (const unsigned char **)&data, len);
++	if (!p12)
++		return 0;
++
++	ret = PKCS12_parse (p12, btls_password, &pkcs12->private_key, &x509_cert, &pkcs12->certs);
++	PKCS12_free(p12);
++
++	if (!ret)
++		return 0;
++
++	if (x509_cert) {
++		if (!pkcs12->certs)
++			pkcs12->certs = sk_X509_new_null ();
++		mono_btls_pkcs12_add_cert (pkcs12, x509_cert);
++	}
++
++	return ret;
++}
++#else
+ static int
+ btls_pkcs12_import (MonoBtlsPkcs12 *pkcs12, const void *data, int len, const char *btls_password)
+ {
+@@ -149,6 +176,7 @@ btls_pkcs12_import (MonoBtlsPkcs12 *pkcs12, const void *data, int len, const cha
+ 	else
+ 		return PKCS12_get_key_and_certs (&pkcs12->private_key, pkcs12->certs, &cbs, "");
+ }
++#endif
+ 
+ int
+ mono_btls_pkcs12_import (MonoBtlsPkcs12 *pkcs12, const void *data, int len, const void *password)
+@@ -170,5 +198,10 @@ mono_btls_pkcs12_get_private_key (MonoBtlsPkcs12 *pkcs12)
+ {
+ 	if (!pkcs12->private_key)
+ 		return NULL;
++#ifdef WITH_OPENSSL
++	EVP_PKEY_up_ref (pkcs12->private_key);
++	return pkcs12->private_key;
++#else
+ 	return EVP_PKEY_up_ref (pkcs12->private_key);
++#endif
+ }
+diff --git a/mono/btls/btls-ssl-ctx.c b/mono/btls/btls-ssl-ctx.c
+index a768ee4..72fd208 100644
+--- a/mono/btls/btls-ssl-ctx.c
++++ b/mono/btls/btls-ssl-ctx.c
+@@ -8,7 +8,9 @@
+ 
+ #include "btls-ssl-ctx.h"
+ #include "btls-x509-verify-param.h"
+-#include <openssl/bytestring.h>
++#ifndef WITH_OPENSSL
++# include <openssl/bytestring.h>
++#endif
+ #include <string.h>
+ 
+ struct MonoBtlsSslCtx {
+@@ -74,6 +76,12 @@ mono_btls_ssl_ctx_new (void)
+ 	// and should generally not be used according to the openssl docs
+ 	SSL_CTX_set_options (ctx->ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+ 
++#if defined(WITH_OPENSSL)
++	// Renegotiation is an extremely problematic protocol
++        // feature, so BoringSSL rejects peer renegotiations by default.
++	SSL_CTX_set_options(ctx->ctx, NO_RENEGOTIATION);
++#endif
++
+ 	return ctx;
+ }
+ 
+@@ -104,9 +112,14 @@ mono_btls_ssl_ctx_get_ctx (MonoBtlsSslCtx *ctx)
+ void
+ mono_btls_ssl_ctx_set_debug_bio (MonoBtlsSslCtx *ctx, BIO *debug_bio)
+ {
+-	if (debug_bio)
++	if (debug_bio) {
++#ifdef WITH_OPENSSL
++		BIO_up_ref(debug_bio);
++		ctx->debug_bio = debug_bio;
++#else
+ 		ctx->debug_bio = BIO_up_ref(debug_bio);
+-	else
++#endif
++	} else
+ 		ctx->debug_bio = NULL;
+ }
+ 
+@@ -172,8 +185,7 @@ cert_select_callback (SSL *ssl, void *arg)
+ 		}
+ 		for (i = 0; i < count; i++) {
+ 			X509_NAME *name = sk_X509_NAME_value (ca_list, i);
+-			cadata[i] = name->bytes->data;
+-			sizes[i] = (int)name->bytes->length;
++			sizes[i] = i2d_X509_NAME(name, (unsigned char**)&cadata[i]);
+ 		}
+ 	}
+ 
+@@ -208,21 +220,45 @@ mono_btls_ssl_ctx_peek_store (MonoBtlsSslCtx *ctx)
+ void
+ mono_btls_ssl_ctx_set_min_version (MonoBtlsSslCtx *ctx, int version)
+ {
++#ifdef WITH_OPENSSL
++	SSL_CTX_set_min_proto_version (ctx->ctx, version);
++#else
+ 	SSL_CTX_set_min_version (ctx->ctx, version);
++#endif
+ }
+ 
+ void
+ mono_btls_ssl_ctx_set_max_version (MonoBtlsSslCtx *ctx, int version)
+ {
++#ifdef WITH_OPENSSL
++	SSL_CTX_set_max_proto_version (ctx->ctx, version);
++#else
+ 	SSL_CTX_set_max_version (ctx->ctx, version);
++#endif
+ }
+ 
+-int
+-mono_btls_ssl_ctx_is_cipher_supported (MonoBtlsSslCtx *ctx, uint16_t value)
++static const SSL_CIPHER *
++mono_btls_ssl_ctx_cipher_by_id(SSL_CTX *ctx, uint16_t value)
+ {
++#ifdef WITH_OPENSSL
++	int i;
+ 	const SSL_CIPHER *cipher;
++	STACK_OF(SSL_CIPHER) *ciphers = SSL_CTX_get_ciphers(ctx);
++	for (i = 0; i < sk_SSL_CIPHER_num(ciphers); i++) {
++		cipher = sk_SSL_CIPHER_value(ciphers, i);
++		if (SSL_CIPHER_get_protocol_id(cipher) == value)
++			return cipher;
++	}
++#else
++	return SSL_get_cipher_by_value (value);
++#endif
++	return NULL;
++}
+ 
+-	cipher = SSL_get_cipher_by_value (value);
++int
++mono_btls_ssl_ctx_is_cipher_supported (MonoBtlsSslCtx *ctx, uint16_t value)
++{
++	const SSL_CIPHER *cipher = mono_btls_ssl_ctx_cipher_by_id(ctx->ctx, value);
+ 	return cipher != NULL;
+ }
+ 
+@@ -230,16 +266,15 @@ int
+ mono_btls_ssl_ctx_set_ciphers (MonoBtlsSslCtx *ctx, int count, const uint16_t *data,
+ 				   int allow_unsupported)
+ {
+-	CBB cbb;
++	char *cbb;
+ 	int i, ret = 0;
+ 
+-	if (!CBB_init (&cbb, 64))
+-		goto err;
++	cbb = (char*)malloc(50 * count);
+ 
+ 	/* Assemble a cipher string with the specified ciphers' names. */
+ 	for (i = 0; i < count; i++) {
+ 		const char *name;
+-		const SSL_CIPHER *cipher = SSL_get_cipher_by_value (data [i]);
++		const SSL_CIPHER *cipher = mono_btls_ssl_ctx_cipher_by_id (ctx->ctx, data [i]);
+ 		if (!cipher) {
+ 			debug_printf (ctx, "mono_btls_ssl_ctx_set_ciphers(): unknown cipher %02x", data [i]);
+ 			if (!allow_unsupported)
+@@ -247,20 +282,15 @@ mono_btls_ssl_ctx_set_ciphers (MonoBtlsSslCtx *ctx, int count, const uint16_t *d
+ 			continue;
+ 		}
+ 		name = SSL_CIPHER_get_name (cipher);
+-		if (i > 0 && !CBB_add_u8 (&cbb, ':'))
+-			goto err;
+-		if (!CBB_add_bytes (&cbb, (const uint8_t *)name, strlen(name)))
+-			goto err;
+-	}
++		strcat(cbb, ":");
++		strcat(cbb, name);
+ 
+-	/* NUL-terminate the string. */
+-	if (!CBB_add_u8 (&cbb, 0))
+-		goto err;
++	}
+ 
+-	ret = SSL_CTX_set_cipher_list (ctx->ctx, (const char *)CBB_data (&cbb));
++	ret = SSL_CTX_set_cipher_list (ctx->ctx, cbb);
+ 
+ err:
+-	CBB_cleanup (&cbb);
++	free (cbb);
+ 	return ret;
+ }
+ 
+diff --git a/mono/btls/btls-ssl.c b/mono/btls/btls-ssl.c
+index 75c84c4..97df6f9 100644
+--- a/mono/btls/btls-ssl.c
++++ b/mono/btls/btls-ssl.c
+@@ -8,6 +8,7 @@
+ 
+ #include "btls-ssl.h"
+ #include "btls-x509-verify-param.h"
++#include <openssl/err.h>
+ 
+ struct MonoBtlsSsl {
+ 	MonoBtlsSslCtx *ctx;
+@@ -24,7 +25,7 @@ do { if (mono_btls_ssl_ctx_is_debug_enabled(ptr->ctx)) \
+ mono_btls_ssl_ctx_debug_printf (ptr->ctx, "%s:%d:%s(): " fmt, __FILE__, __LINE__, \
+ __func__, __VA_ARGS__); } while (0)
+ 
+-STACK_OF(SSL_CIPHER) *ssl_bytes_to_cipher_list (SSL *s, const CBS *cbs);
++//STACK_OF(SSL_CIPHER) *ssl_bytes_to_cipher_list (SSL *s, const CBS *cbs);
+ 
+ MonoBtlsSsl *
+ mono_btls_ssl_new (MonoBtlsSslCtx *ctx)
+@@ -35,6 +36,11 @@ mono_btls_ssl_new (MonoBtlsSslCtx *ctx)
+ 
+ 	ptr->ctx = mono_btls_ssl_ctx_up_ref (ctx);
+ 	ptr->ssl = SSL_new (mono_btls_ssl_ctx_get_ctx (ptr->ctx));
++#if defined(WITH_OPENSSL)
++	// Renegotiation is an extremely problematic protocol
++        // feature, so BoringSSL rejects peer renegotiations by default.
++	SSL_set_options(ptr->ssl, NO_RENEGOTIATION);
++#endif
+ 
+ 	return ptr;
+ }
+@@ -142,13 +148,23 @@ mono_btls_ssl_get_version (MonoBtlsSsl *ptr)
+ void
+ mono_btls_ssl_set_min_version (MonoBtlsSsl *ptr, int version)
+ {
++#ifdef WITH_OPENSSL
++	if (ptr->ctx)
++		SSL_CTX_set_min_proto_version (mono_btls_ssl_ctx_get_ctx (ptr->ctx), version);
++#else
+ 	SSL_set_min_version (ptr->ssl, version);
++#endif
+ }
+ 
+ void
+ mono_btls_ssl_set_max_version (MonoBtlsSsl *ptr, int version)
+ {
++#ifdef WITH_OPENSSL
++	if (ptr->ctx)
++		SSL_CTX_set_max_proto_version (mono_btls_ssl_ctx_get_ctx (ptr->ctx), version);
++#else
+ 	SSL_set_max_version (ptr->ssl, version);
++#endif
+ }
+ 
+ int
+@@ -227,12 +243,28 @@ mono_btls_ssl_get_server_name (MonoBtlsSsl *ptr)
+ void
+ mono_btls_ssl_set_renegotiate_mode (MonoBtlsSsl *ptr, MonoBtlsSslRenegotiateMode mode)
+ {
+-    SSL_set_renegotiate_mode (ptr->ssl, (enum ssl_renegotiate_mode_t)mode);
++#if defined(WITH_OPENSSL)
++	// Renegotiation is an extremely problematic protocol
++        // feature, so BoringSSL rejects peer renegotiations by default.
++	switch ((enum ssl_renegotiate_mode_t)mode) {
++		case ssl_renegotiate_never :
++		case ssl_renegotiate_ignore :
++			SSL_set_options(ptr->ssl, NO_RENEGOTIATION);
++			break;
++		case ssl_renegotiate_once :
++		case ssl_renegotiate_freely :
++			SSL_clear_options(ptr->ssl, NO_RENEGOTIATION);
++			break;
++
++	}
++#else
++	SSL_set_renegotiate_mode (ptr->ssl, (enum ssl_renegotiate_mode_t)mode);
++#endif
+ }
+ 
+ int
+ mono_btls_ssl_renegotiate_pending (MonoBtlsSsl *ptr)
+ {
+-    return SSL_renegotiate_pending (ptr->ssl);
++	return SSL_renegotiate_pending (ptr->ssl);
+ }
+ 
+diff --git a/mono/btls/btls-ssl.h b/mono/btls/btls-ssl.h
+index d3c1060..8f10d33 100644
+--- a/mono/btls/btls-ssl.h
++++ b/mono/btls/btls-ssl.h
+@@ -11,6 +11,18 @@
+ 
+ #include "btls-ssl-ctx.h"
+ 
++#ifdef WITH_OPENSSL
++/* ERR_print_errors_callback_t is the type of a function used by
++ * |ERR_print_errors_cb|. It takes a pointer to a human readable string (and
++ * its length) that describes an entry in the error queue. The |ctx| argument
++ * is an opaque pointer given to |ERR_print_errors_cb|.
++ *
++ * It should return one on success or zero on error, which will stop the
++ * iteration over the error queue. */
++typedef int (*ERR_print_errors_callback_t)(const char *str, size_t len,
++                                           void *ctx);
++#endif
++
+ MONO_API MonoBtlsSsl *
+ mono_btls_ssl_new (MonoBtlsSslCtx *ctx);
+ 
+diff --git a/mono/btls/btls-util.c b/mono/btls/btls-util.c
+index 6456560..d8c0f52 100644
+--- a/mono/btls/btls-util.c
++++ b/mono/btls/btls-util.c
+@@ -8,8 +8,16 @@
+ 
+ #include "btls-util.h"
+ #include <assert.h>
++#include <openssl/err.h>
+ // #include <time.h>
+ 
++#ifdef WITH_OPENSSL
++/* OPENSSL_PUT_ERROR is used by OpenSSL code to add an error to the error
++ * queue. */
++#define OPENSSL_PUT_ERROR(library, reason) \
++  ERR_put_error(ERR_LIB_##library, 0, reason, __FILE__, __LINE__)
++#endif
++
+ extern int asn1_generalizedtime_to_tm (struct tm *tm, const ASN1_GENERALIZEDTIME *d);
+ 
+ extern int64_t btls_timegm64 (const struct tm *date);
+diff --git a/mono/btls/btls-util.h b/mono/btls/btls-util.h
+index 2f50b7e..a9a2b7f 100644
+--- a/mono/btls/btls-util.h
++++ b/mono/btls/btls-util.h
+@@ -62,7 +62,25 @@ mono_btls_util_asn1_time_to_ticks (ASN1_TIME *time);
+ int
+ mono_btls_debug_printf (BIO *bio, const char *format, va_list args);
+ 
++#ifdef WITH_OPENSSL
++typedef uint32_t CRYPTO_refcount_t;
++#endif
++
+ OPENSSL_EXPORT void CRYPTO_refcount_inc(CRYPTO_refcount_t *count);
+ OPENSSL_EXPORT int CRYPTO_refcount_dec_and_test_zero(CRYPTO_refcount_t *count);
+ 
++#ifdef WITH_OPENSSL
++# if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
++#  define NO_RENEGOTIATION SSL_OP_NO_RENEGOTIATION
++# else
++#  define NO_RENEGOTIATION SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS
++# endif
++enum ssl_renegotiate_mode_t {
++  ssl_renegotiate_never = 0,
++  ssl_renegotiate_once,
++  ssl_renegotiate_freely,
++  ssl_renegotiate_ignore,
++};
++#endif
++
+ #endif /* __btls__btls_util__ */
+diff --git a/mono/btls/btls-x509-lookup-mono.c b/mono/btls/btls-x509-lookup-mono.c
+index 40cbddd..29f29ba 100644
+--- a/mono/btls/btls-x509-lookup-mono.c
++++ b/mono/btls/btls-x509-lookup-mono.c
+@@ -105,7 +105,7 @@ mono_btls_x509_lookup_mono_free (MonoBtlsX509LookupMono *mono)
+ static int
+ mono_lookup_ctrl (X509_LOOKUP *ctx, int cmd, const char *argp, long argl, char **ret)
+ {
+-	MonoLookup *lookup = (MonoLookup*)ctx->method_data;
++	MonoLookup *lookup = (MonoLookup*)X509_LOOKUP_get_method_data(ctx);
+ 	MonoBtlsX509LookupMono *mono = (MonoBtlsX509LookupMono*)argp;
+ 
+ 	if (!lookup || cmd != MONO_BTLS_X509_L_MONO_ADD)
+@@ -126,7 +126,7 @@ mono_lookup_new (X509_LOOKUP *ctx)
+ 		return 0;
+ 
+ 	memset (data, 0, sizeof (MonoLookup));
+-	ctx->method_data = (void *)data;
++	X509_LOOKUP_set_method_data(ctx, data);
+ 	return 1;
+ }
+ 
+@@ -136,8 +136,8 @@ mono_lookup_free (X509_LOOKUP *ctx)
+ 	MonoLookup *lookup;
+ 	MonoLookupNode *ptr;
+ 
+-	lookup = (MonoLookup *)ctx->method_data;
+-	ctx->method_data = NULL;
++	lookup = (MonoLookup*)X509_LOOKUP_get_method_data(ctx);
++	X509_LOOKUP_set_method_data(ctx, NULL);
+ 	if (!lookup)
+ 		return;
+ 
+@@ -159,7 +159,7 @@ mono_lookup_free (X509_LOOKUP *ctx)
+ }
+ 
+ static int
+-mono_lookup_get_by_subject (X509_LOOKUP *ctx, int type, X509_NAME *name, X509_OBJECT *obj_ret)
++mono_lookup_get_by_subject (X509_LOOKUP *ctx, X509_LOOKUP_TYPE type, X509_NAME *name, X509_OBJECT *obj_ret)
+ {
+ 	MonoLookup *lookup;
+ 	MonoBtlsX509Name *name_obj;
+@@ -167,7 +167,7 @@ mono_lookup_get_by_subject (X509_LOOKUP *ctx, int type, X509_NAME *name, X509_OB
+ 	X509 *x509 = NULL;
+ 	int ret = 0;
+ 
+-	lookup = (MonoLookup *)ctx->method_data;
++	lookup = (MonoLookup*)X509_LOOKUP_get_method_data(ctx);
+ 
+ 	if (!lookup || !lookup->nodes)
+ 		return 0;
+@@ -193,28 +193,23 @@ mono_lookup_get_by_subject (X509_LOOKUP *ctx, int type, X509_NAME *name, X509_OB
+ 		return 0;
+ 	}
+ 
+-	obj_ret->type = X509_LU_X509;
+-	obj_ret->data.x509 = x509;
+-	return 1;
++	return X509_OBJECT_set1_X509(obj_ret, x509);
+ }
+ 
+-static X509_LOOKUP_METHOD mono_lookup_method = {
+-	"Mono lookup method",
+-	mono_lookup_new,		/* new */
+-	mono_lookup_free,		/* free */
+-	NULL,				/* init */
+-	NULL,				/* shutdown */
+-	mono_lookup_ctrl,		/* ctrl	*/
+-	mono_lookup_get_by_subject,	/* get_by_subject */
+-	NULL,				/* get_by_issuer_serial */
+-	NULL,				/* get_by_fingerprint */
+-	NULL,				/* get_by_alias */
+-};
++static X509_LOOKUP_METHOD *mono_lookup_method = NULL;
+ 
+ X509_LOOKUP_METHOD *
+ mono_btls_x509_lookup_mono_method (void)
+ {
+-	return &mono_lookup_method;
++	if (mono_lookup_method == NULL) {
++		mono_lookup_method = X509_LOOKUP_meth_new ("Mono lookup method");
++		X509_LOOKUP_meth_set_init(mono_lookup_method, mono_lookup_new);
++		X509_LOOKUP_meth_set_free(mono_lookup_method, mono_lookup_free);
++		X509_LOOKUP_meth_set_ctrl(mono_lookup_method, mono_lookup_ctrl);
++		X509_LOOKUP_meth_set_get_by_subject(mono_lookup_method, mono_lookup_get_by_subject);
++	}
++	
++	return mono_lookup_method;
+ }
+ 
+ int
+diff --git a/mono/btls/btls-x509-lookup.c b/mono/btls/btls-x509-lookup.c
+index 36b3526..6298408 100644
+--- a/mono/btls/btls-x509-lookup.c
++++ b/mono/btls/btls-x509-lookup.c
+@@ -130,33 +130,37 @@ mono_btls_x509_lookup_peek_lookup (MonoBtlsX509Lookup *lookup)
+ X509 *
+ mono_btls_x509_lookup_by_subject (MonoBtlsX509Lookup *lookup, MonoBtlsX509Name *name)
+ {
+-	X509_OBJECT obj;
++	X509_OBJECT *obj = X509_OBJECT_new();
+ 	X509 *x509;
+ 	int ret;
+ 
+-	ret = X509_LOOKUP_by_subject (lookup->lookup, X509_LU_X509, mono_btls_x509_name_peek_name (name), &obj);
++	ret = X509_LOOKUP_by_subject (lookup->lookup, X509_LU_X509, mono_btls_x509_name_peek_name (name), obj);
+ 	if (ret != X509_LU_X509) {
+-		X509_OBJECT_free_contents (&obj);
++		X509_OBJECT_free (obj);
+ 		return NULL;
+ 	}
+ 
+-	x509 = X509_up_ref (obj.data.x509);
++	x509 = X509_OBJECT_get0_X509(obj);
++	X509_up_ref (x509);
++	X509_OBJECT_free(obj);
+ 	return x509;
+ }
+ 
+ X509 *
+ mono_btls_x509_lookup_by_fingerprint (MonoBtlsX509Lookup *lookup, unsigned char *bytes, int len)
+ {
+-	X509_OBJECT obj;
++	X509_OBJECT *obj = X509_OBJECT_new();
+ 	X509 *x509;
+ 	int ret;
+ 
+-	ret = X509_LOOKUP_by_fingerprint (lookup->lookup, X509_LU_X509, bytes, len, &obj);
++	ret = X509_LOOKUP_by_fingerprint (lookup->lookup, X509_LU_X509, bytes, len, obj);
+ 	if (ret != X509_LU_X509) {
+-		X509_OBJECT_free_contents (&obj);
++		X509_OBJECT_free (obj);
+ 		return NULL;
+ 	}
+ 
+-	x509 = X509_up_ref (obj.data.x509);
++	x509 = X509_OBJECT_get0_X509(obj);
++	X509_up_ref (x509);
++	X509_OBJECT_free(obj);
+ 	return x509;
+ }
+diff --git a/mono/btls/btls-x509-name.c b/mono/btls/btls-x509-name.c
+index 6adce43..9114322 100644
+--- a/mono/btls/btls-x509-name.c
++++ b/mono/btls/btls-x509-name.c
+@@ -66,11 +66,23 @@ mono_btls_x509_name_print_bio (MonoBtlsX509Name *name, BIO *bio)
+ 	return X509_NAME_print_ex (bio, name->name, 0, ASN1_STRFLGS_RFC2253 | XN_FLAG_FN_SN | XN_FLAG_SEP_CPLUS_SPC | XN_FLAG_DN_REV);
+ }
+ 
++#ifdef WITH_OPENSSL
++/* Name from RFC 5280. */
++struct X509_name_st {
++        STACK_OF(X509_NAME_ENTRY) *entries; /* DN components */
++        int modified;               /* true if 'bytes' needs to be built */
++        BUF_MEM *bytes;             /* cached encoding: cannot be NULL */
++        /* canonical encoding used for rapid Name comparison */
++        unsigned char *canon_enc;
++        int canon_enclen;
++} /* X509_NAME */ ;
++#endif
++
+ int
+ mono_btls_x509_name_get_raw_data (MonoBtlsX509Name *name, void **buffer, int use_canon_enc)
+ {
+-	int len;
+-	void *ptr;
++	size_t len;
++	const unsigned char *ptr;
+ 
+ 	if (use_canon_enc) {
+ 		// make sure canon_enc is initialized.
+@@ -79,8 +91,7 @@ mono_btls_x509_name_get_raw_data (MonoBtlsX509Name *name, void **buffer, int use
+ 		len = name->name->canon_enclen;
+ 		ptr = name->name->canon_enc;
+ 	} else {
+-		len = (int)name->name->bytes->length;
+-		ptr = name->name->bytes->data;
++		X509_NAME_get0_der(name->name, &ptr, &len);
+ 	}
+ 
+ 	*buffer = OPENSSL_malloc (len);
+@@ -113,6 +124,19 @@ mono_btls_x509_name_from_data (const void *data, int len, int use_canon_enc)
+ 	}
+ 
+ 	if (use_canon_enc) {
++#ifdef WITH_OPENSSL
++                ASN1_STRING *asn1_canon = ASN1_STRING_type_new(V_ASN1_UTF8STRING);
++                if (!ASN1_STRING_set(asn1_canon, data, len)) {
++                        ASN1_STRING_free(asn1_canon);
++			mono_btls_x509_name_free (name);
++			return NULL;
++                }
++
++                len = ASN1_STRING_length(asn1_canon);
++                ptr = buf = OPENSSL_strndup(
++                        (const char*)ASN1_STRING_get0_data(asn1_canon),
++                        len);
++#else
+ 		CBB cbb, contents;
+ 		size_t buf_len;
+ 
+@@ -128,6 +152,7 @@ mono_btls_x509_name_from_data (const void *data, int len, int use_canon_enc)
+ 
+ 		ptr = buf;
+ 		len = (int)buf_len;
++#endif
+ 	} else {
+ 		ptr = data;
+ 		buf = NULL;
+@@ -267,8 +292,8 @@ mono_btls_x509_name_get_entry_oid_data (MonoBtlsX509Name *name, int index, const
+ 	if (!obj)
+ 		return -1;
+ 
+-	*data = obj->data;
+-	return obj->length;
++	*data = OBJ_get0_data(obj);
++	return OBJ_length(obj);
+ }
+ 
+ int
+diff --git a/mono/btls/btls-x509-revoked.c b/mono/btls/btls-x509-revoked.c
+index 4ae8c5b..848b618 100644
+--- a/mono/btls/btls-x509-revoked.c
++++ b/mono/btls/btls-x509-revoked.c
+@@ -36,9 +36,9 @@ mono_btls_x509_revoked_free (MonoBtlsX509Revoked *revoked)
+ int
+ mono_btls_x509_revoked_get_serial_number (MonoBtlsX509Revoked *revoked, char *buffer, int size)
+ {
+-	ASN1_INTEGER *serial;
++	const ASN1_INTEGER *serial;
+ 
+-	serial = revoked->revoked->serialNumber;
++	serial = X509_REVOKED_get0_serialNumber(revoked->revoked);
+ 	if (serial->length == 0 || serial->length+1 > size)
+ 		return 0;
+ 
+@@ -51,13 +51,30 @@ mono_btls_x509_revoked_get_revocation_date (MonoBtlsX509Revoked *revoked)
+ {
+ 	ASN1_TIME *date;
+ 
+-	date = revoked->revoked->revocationDate;
++	date = X509_REVOKED_get0_revocationDate(revoked->revoked);
+ 	if (!date)
+ 		return 0;
+ 
+ 	return mono_btls_util_asn1_time_to_ticks (date);
+ }
+ 
++#ifdef WITH_OPENSSL
++struct x509_revoked_st {
++    ASN1_INTEGER serialNumber; /* revoked entry serial number */
++    ASN1_TIME *revocationDate;  /* revocation date */
++    STACK_OF(X509_EXTENSION) *extensions;   /* CRL entry extensions: optional */
++    /* decoded value of CRLissuer extension: set if indirect CRL */
++    STACK_OF(GENERAL_NAME) *issuer;
++    /* revocation reason: set to CRL_REASON_NONE if reason extension absent */
++    int reason;
++    /*
++     * CRL entries are reordered for faster lookup of serial numbers. This
++     * field contains the original load sequence for this entry.
++     */
++    int sequence;
++};
++#endif
++
+ int
+ mono_btls_x509_revoked_get_reason (MonoBtlsX509Revoked *revoked)
+ {
+diff --git a/mono/btls/btls-x509-store-ctx.c b/mono/btls/btls-x509-store-ctx.c
+index 2f69e9e..19aa83f 100644
+--- a/mono/btls/btls-x509-store-ctx.c
++++ b/mono/btls/btls-x509-store-ctx.c
+@@ -117,7 +117,7 @@ mono_btls_x509_store_ctx_get_untrusted (MonoBtlsX509StoreCtx *ctx)
+ 	 * This is the set of certificate that's passed in by
+ 	 * X509_STORE_CTX_init() and X509_STORE_CTX_set_chain().
+ 	 */
+-	untrusted = ctx->ctx->untrusted;
++	untrusted = X509_STORE_CTX_get0_untrusted(ctx->ctx);
+ 	if (!untrusted)
+ 		return NULL;
+ 
+@@ -166,17 +166,19 @@ mono_btls_x509_store_ctx_verify_cert (MonoBtlsX509StoreCtx *ctx)
+ X509 *
+ mono_btls_x509_store_ctx_get_by_subject (MonoBtlsX509StoreCtx *ctx, MonoBtlsX509Name *name)
+ {
+-	X509_OBJECT obj;
++	X509_OBJECT *obj = X509_OBJECT_new();
+ 	X509 *x509;
+ 	int ret;
+ 
+-	ret = X509_STORE_get_by_subject (ctx->ctx, X509_LU_X509, mono_btls_x509_name_peek_name (name), &obj);
++	ret = X509_STORE_get_by_subject (ctx->ctx, X509_LU_X509, mono_btls_x509_name_peek_name (name), obj);
+ 	if (ret != X509_LU_X509) {
+-		X509_OBJECT_free_contents (&obj);
++		X509_OBJECT_free (obj);
+ 		return NULL;
+ 	}
+ 
+-	x509 = X509_up_ref (obj.data.x509);
++        x509 = X509_OBJECT_get0_X509(obj);
++	X509_up_ref(x509);
++        X509_OBJECT_free (obj);
+ 	return x509;
+ }
+ 
+@@ -186,7 +188,12 @@ mono_btls_x509_store_ctx_get_current_cert (MonoBtlsX509StoreCtx *ctx)
+ 	X509 *x509 = X509_STORE_CTX_get_current_cert (ctx->ctx);
+ 	if (!x509)
+ 		return NULL;
++#ifdef WITH_OPENSSL
++        X509_up_ref(x509);
++        return x509;
++#else
+ 	return X509_up_ref (x509);
++#endif
+ }
+ 
+ X509 *
+@@ -195,7 +202,12 @@ mono_btls_x509_store_ctx_get_current_issuer (MonoBtlsX509StoreCtx *ctx)
+ 	X509 *x509 = X509_STORE_CTX_get0_current_issuer (ctx->ctx);
+ 	if (!x509)
+ 		return NULL;
++#ifdef WITH_OPENSSL
++        X509_up_ref(x509);
++        return x509;
++#else
+ 	return X509_up_ref (x509);
++#endif
+ }
+ 
+ MonoBtlsX509VerifyParam *
+diff --git a/mono/btls/btls-x509-store.c b/mono/btls/btls-x509-store.c
+index efa3db3..942a757 100644
+--- a/mono/btls/btls-x509-store.c
++++ b/mono/btls/btls-x509-store.c
+@@ -24,7 +24,11 @@ mono_btls_x509_store_from_store (X509_STORE *ctx)
+ 
+ 	memset (store, 0, sizeof(MonoBtlsX509Store));
+ 	store->store = ctx;
++#ifdef WITH_OPENSSL
++        X509_STORE_up_ref(store->store);
++#else
+ 	CRYPTO_refcount_inc (&store->store->references);
++#endif
+ 	store->references = 1;
+ 	return store;
+ }
+@@ -32,7 +36,7 @@ mono_btls_x509_store_from_store (X509_STORE *ctx)
+ MonoBtlsX509Store *
+ mono_btls_x509_store_from_ctx (X509_STORE_CTX *ctx)
+ {
+-	return mono_btls_x509_store_from_store (ctx->ctx);
++	return mono_btls_x509_store_from_store (X509_STORE_CTX_get0_store(ctx));
+ }
+ 
+ MonoBtlsX509Store *
+@@ -105,6 +109,6 @@ mono_btls_x509_store_set_default_paths (MonoBtlsX509Store *store)
+ int
+ mono_btls_x509_store_get_count (MonoBtlsX509Store *store)
+ {
+-	return (int)sk_X509_OBJECT_num (store->store->objs);
++	return (int)sk_X509_OBJECT_num (X509_STORE_get0_objects(store->store));
+ }
+ 
+diff --git a/mono/btls/btls-x509.c b/mono/btls/btls-x509.c
+index 27fc1c1..bd438af 100644
+--- a/mono/btls/btls-x509.c
++++ b/mono/btls/btls-x509.c
+@@ -97,8 +97,11 @@ int
+ mono_btls_x509_get_hash (X509 *x509, const void **data)
+ {
+ 	X509_check_purpose (x509, -1, 0);
+-	*data = x509->sha1_hash;
+-	return SHA_DIGEST_LENGTH;
++	if (X509_digest(x509, EVP_sha1(), *data, NULL) == 1) {
++		return SHA_DIGEST_LENGTH;
++	} else {
++		return 0;
++	}
+ }
+ 
+ int64_t
+@@ -119,10 +122,7 @@ mono_btls_x509_get_public_key (X509 *x509, BIO *bio)
+ 	ASN1_BIT_STRING *pkey;
+ 	int ret;
+ 
+-	if (!x509 || !x509->cert_info || !x509->cert_info->key)
+-		return -1;
+-
+-	pkey = x509->cert_info->key->public_key;
++	pkey = X509_get0_pubkey_bitstr(x509);
+ 	if (!pkey || !pkey->data)
+ 		return -1;
+ 
+@@ -137,7 +137,8 @@ int
+ mono_btls_x509_get_serial_number (X509 *x509, char *buffer, int size, int mono_style)
+ {
+ 	ASN1_INTEGER *serial;
+-	unsigned char *temp, *p;
++	BIGNUM *bnser;
++	char *asciiHex;
+ 	int len;
+ 
+ 	serial = X509_get_serialNumber (x509);
+@@ -149,22 +150,13 @@ mono_btls_x509_get_serial_number (X509 *x509, char *buffer, int size, int mono_s
+ 		return serial->length;
+ 	}
+ 
+-	temp = OPENSSL_malloc (serial->length + 1);
+-	if (!temp)
+-		return 0;
++	bnser = ASN1_INTEGER_to_BN(serial, NULL);
++	asciiHex = BN_bn2hex(bnser);
++	len = strlen(asciiHex);
+ 
+-	p = temp;
+-	len = i2c_ASN1_INTEGER (serial, &p);
++	memcpy (buffer, asciiHex, len);
+ 
+-	if (!len) {
+-		OPENSSL_free (temp);
+-		return 0;
+-	}
+-
+-	memcpy (buffer, temp, len);
+-	buffer [len] = 0;
+-
+-	OPENSSL_free (temp);
++	OPENSSL_free (asciiHex);
+ 	return len;
+ }
+ 
+@@ -222,8 +214,11 @@ mono_btls_x509_get_public_key_asn1 (X509 *x509, char *out_oid, int oid_len, uint
+ 	if (out_oid)
+ 		*out_oid = 0;
+ 
++	if (!X509_get0_pubkey_bitstr(x509))
++		return 0;
++
+ 	pkey = X509_get_X509_PUBKEY (x509);
+-	if (!pkey || !pkey->public_key)
++	if (!pkey)
+ 		return 0;
+ 
+ 	ret = X509_PUBKEY_get0_param (&ppkalg, &pk, &pk_len, NULL, pkey);
+@@ -252,9 +247,9 @@ mono_btls_x509_get_public_key_parameters (X509 *x509, char *out_oid, int oid_len
+ {
+ 	X509_PUBKEY *pkey;
+ 	X509_ALGOR *algor;
+-	ASN1_OBJECT *paobj;
++	const ASN1_OBJECT *paobj;
+ 	int ptype;
+-	void *pval;
++	const void *pval;
+ 	int ret;
+ 
+ 	if (out_oid)
+@@ -288,7 +283,7 @@ mono_btls_x509_get_public_key_parameters (X509 *x509, char *out_oid, int oid_len
+ 
+ 		return 1;
+ 	} else if (ptype == V_ASN1_SEQUENCE) {
+-		ASN1_STRING *pstr = pval;
++		const ASN1_STRING *pstr = pval;
+ 
+ 		*size = pstr->length;
+ 		*buffer = OPENSSL_malloc (pstr->length);
+@@ -365,11 +360,10 @@ mono_btls_x509_add_trust_object (X509 *x509, MonoBtlsX509Purpose purpose)
+ 	if (!nid)
+ 		return 0;
+ 
+-	trust = ASN1_OBJECT_new ();
++	trust = OBJ_nid2obj(nid);
+ 	if (!trust)
+ 		return 0;
+ 
+-	trust->nid = nid;
+ 	return X509_add1_trust_object (x509, trust);
+ }
+ 
+@@ -383,11 +377,10 @@ mono_btls_x509_add_reject_object (X509 *x509, MonoBtlsX509Purpose purpose)
+ 	if (!nid)
+ 		return 0;
+ 
+-	reject = ASN1_OBJECT_new ();
++	reject = OBJ_nid2obj(nid);
+ 	if (!reject)
+ 		return 0;
+ 
+-	reject->nid = nid;
+ 	return X509_add1_reject_object (x509, reject);
+ }
+ 
+diff --git a/mono/btls/hexdump.c b/mono/btls/hexdump.c
+new file mode 100644
+index 0000000..62c78aa
+--- /dev/null
++++ b/mono/btls/hexdump.c
+@@ -0,0 +1,194 @@
++/* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
++ * All rights reserved.
++ *
++ * This package is an SSL implementation written
++ * by Eric Young (eay@cryptsoft.com).
++ * The implementation was written so as to conform with Netscapes SSL.
++ *
++ * This library is free for commercial and non-commercial use as long as
++ * the following conditions are aheared to.  The following conditions
++ * apply to all code found in this distribution, be it the RC4, RSA,
++ * lhash, DES, etc., code; not just the SSL code.  The SSL documentation
++ * included with this distribution is covered by the same copyright terms
++ * except that the holder is Tim Hudson (tjh@cryptsoft.com).
++ *
++ * Copyright remains Eric Young's, and as such any Copyright notices in
++ * the code are not to be removed.
++ * If this package is used in a product, Eric Young should be given attribution
++ * as the author of the parts of the library used.
++ * This can be in the form of a textual message at program startup or
++ * in documentation (online or textual) provided with the package.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. All advertising materials mentioning features or use of this software
++ *    must display the following acknowledgement:
++ *    "This product includes cryptographic software written by
++ *     Eric Young (eay@cryptsoft.com)"
++ *    The word 'cryptographic' can be left out if the rouines from the library
++ *    being used are not cryptographic related :-).
++ * 4. If you include any Windows specific code (or a derivative thereof) from
++ *    the apps directory (application code) you must include an acknowledgement:
++ *    "This product includes software written by Tim Hudson (tjh@cryptsoft.com)"
++ *
++ * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++ * SUCH DAMAGE.
++ *
++ * The licence and distribution terms for any publically available version or
++ * derivative of this code cannot be changed.  i.e. this code cannot simply be
++ * copied and put under another distribution licence
++ * [including the GNU Public Licence.] */
++
++#include <openssl/bio.h>
++
++#include <limits.h>
++#include <string.h>
++
++int BIO_hexdump(BIO *bio, const uint8_t *data, size_t len, unsigned indent);
++
++
++/* hexdump_ctx contains the state of a hexdump. */
++struct hexdump_ctx {
++  BIO *bio;
++  char right_chars[18]; /* the contents of the right-hand side, ASCII dump. */
++  unsigned used;        /* number of bytes in the current line. */
++  size_t n;             /* number of bytes total. */
++  unsigned indent;
++};
++
++static void hexbyte(char *out, uint8_t b) {
++  static const char hextable[] = "0123456789abcdef";
++  out[0] = hextable[b>>4];
++  out[1] = hextable[b&0x0f];
++}
++
++static char to_char(uint8_t b) {
++  if (b < 32 || b > 126) {
++          return '.';
++  }
++  return b;
++}
++
++/* hexdump_write adds |len| bytes of |data| to the current hex dump described by
++ * |ctx|. */
++static int hexdump_write(struct hexdump_ctx *ctx, const uint8_t *data,
++                         size_t len) {
++  size_t i;
++  char buf[10];
++  unsigned l;
++
++  /* Output lines look like:
++   * 00000010  2e 2f 30 31 32 33 34 35  36 37 38 ... 3c 3d // |./0123456789:;<=|
++   * ^ offset                          ^ extra space           ^ ASCII of line
++   */
++
++  for (i = 0; i < len; i++) {
++    if (ctx->used == 0) {
++      /* The beginning of a line. */
++      BIO_indent(ctx->bio, ctx->indent, UINT_MAX);
++
++      hexbyte(&buf[0], ctx->n >> 24);
++      hexbyte(&buf[2], ctx->n >> 16);
++      hexbyte(&buf[4], ctx->n >> 8);
++      hexbyte(&buf[6], ctx->n);
++      buf[8] = buf[9] = ' ';
++      if (BIO_write(ctx->bio, buf, 10) < 0) {
++        return 0;
++      }
++    }
++
++    hexbyte(buf, data[i]);
++    buf[2] = ' ';
++    l = 3;
++    if (ctx->used == 7) {
++      /* There's an additional space after the 8th byte. */
++      buf[3] = ' ';
++      l = 4;
++    } else if (ctx->used == 15) {
++      /* At the end of the line there's an extra space and the bar for the
++       * right column. */
++      buf[3] = ' ';
++      buf[4] = '|';
++      l = 5;
++    }
++
++    if (BIO_write(ctx->bio, buf, l) < 0) {
++      return 0;
++    }
++    ctx->right_chars[ctx->used] = to_char(data[i]);
++    ctx->used++;
++    ctx->n++;
++    if (ctx->used == 16) {
++      ctx->right_chars[16] = '|';
++      ctx->right_chars[17] = '\n';
++      if (BIO_write(ctx->bio, ctx->right_chars, sizeof(ctx->right_chars)) < 0) {
++        return 0;
++      }
++      ctx->used = 0;
++    }
++  }
++
++  return 1;
++}
++
++/* finish flushes any buffered data in |ctx|. */
++static int finish(struct hexdump_ctx *ctx) {
++  /* See the comments in |hexdump| for the details of this format. */
++  const unsigned n_bytes = ctx->used;
++  unsigned l;
++  char buf[5];
++
++  if (n_bytes == 0) {
++    return 1;
++  }
++
++  memset(buf, ' ', 4);
++  buf[4] = '|';
++
++  for (; ctx->used < 16; ctx->used++) {
++    l = 3;
++    if (ctx->used == 7) {
++      l = 4;
++    } else if (ctx->used == 15) {
++      l = 5;
++    }
++    if (BIO_write(ctx->bio, buf, l) < 0) {
++      return 0;
++    }
++  }
++
++  ctx->right_chars[n_bytes] = '|';
++  ctx->right_chars[n_bytes + 1] = '\n';
++  if (BIO_write(ctx->bio, ctx->right_chars, n_bytes + 2) < 0) {
++    return 0;
++  }
++  return 1;
++}
++
++int BIO_hexdump(BIO *bio, const uint8_t *data, size_t len, unsigned indent) {
++  struct hexdump_ctx ctx;
++  memset(&ctx, 0, sizeof(ctx));
++  ctx.bio = bio;
++  ctx.indent = indent;
++
++  if (!hexdump_write(&ctx, data, len) || !finish(&ctx)) {
++    return 0;
++  }
++
++  return 1;
++}
