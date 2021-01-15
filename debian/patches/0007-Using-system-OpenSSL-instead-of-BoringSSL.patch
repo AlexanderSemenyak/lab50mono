@@ -708,7 +708,7 @@ Index: mono/mono/btls/btls-util.c
 ===================================================================
 --- mono.orig/mono/btls/btls-util.c
 +++ mono/mono/btls/btls-util.c
-@@ -8,9 +8,28 @@
+@@ -8,9 +8,35 @@
  
  #include "btls-util.h"
  #include <assert.h>
@@ -731,13 +731,20 @@ Index: mono/mono/btls/btls-util.c
 +        return 0;
 +    return ASN1_TIME_to_tm(d, tm);
 +}
++
++#if (OPENSSL_VERSION_NUMBER <= 0x1010006fL)
++uint16_t SSL_CIPHER_get_protocol_id(const SSL_CIPHER *c)
++{
++    return SSL_CIPHER_get_id(c) & 0xFFFF;
++}
++#endif /* OPENSSL_VERSION_NUMBER */
 +#else
  extern int asn1_generalizedtime_to_tm (struct tm *tm, const ASN1_GENERALIZEDTIME *d);
 +#endif
  
  extern int64_t btls_timegm64 (const struct tm *date);
  
-@@ -80,3 +99,71 @@ mono_btls_debug_printf (BIO *bio, const
+@@ -80,3 +106,71 @@ mono_btls_debug_printf (BIO *bio, const
  
  	return ret;
  }
@@ -813,7 +820,7 @@ Index: mono/mono/btls/btls-util.h
 ===================================================================
 --- mono.orig/mono/btls/btls-util.h
 +++ mono/mono/btls/btls-util.h
-@@ -62,7 +62,30 @@ mono_btls_util_asn1_time_to_ticks (ASN1_
+@@ -62,7 +62,31 @@ mono_btls_util_asn1_time_to_ticks (ASN1_
  int
  mono_btls_debug_printf (BIO *bio, const char *format, va_list args);
  
@@ -834,6 +841,7 @@ Index: mono/mono/btls/btls-util.h
 +#  define NO_RENEGOTIATION SSL_OP_NO_RENEGOTIATION
 +# else
 +#  define NO_RENEGOTIATION SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS
++uint16_t SSL_CIPHER_get_protocol_id(const SSL_CIPHER *c);
 +# endif
 +enum ssl_renegotiate_mode_t {
 +  ssl_renegotiate_never = 0,
