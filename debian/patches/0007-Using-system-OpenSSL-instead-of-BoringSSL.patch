@@ -708,7 +708,7 @@ Index: mono/mono/btls/btls-util.c
 ===================================================================
 --- mono.orig/mono/btls/btls-util.c
 +++ mono/mono/btls/btls-util.c
-@@ -8,9 +8,35 @@
+@@ -8,9 +8,244 @@
  
  #include "btls-util.h"
  #include <assert.h>
@@ -737,6 +737,215 @@ Index: mono/mono/btls/btls-util.c
 +{
 +    return SSL_CIPHER_get_id(c) & 0xFFFF;
 +}
++
++static inline int ascii_isdigit(const char inchar) {
++    if (inchar > 0x2F && inchar < 0x3A)
++        return 1;
++    return 0;
++}
++
++static int asn1_time_to_tm(struct tm *tm, const ASN1_TIME *d)
++{
++    static const int min[9] = { 0, 0, 1, 1, 0, 0, 0, 0, 0 };
++    static const int max[9] = { 99, 99, 12, 31, 23, 59, 59, 12, 59 };
++    static const int mdays[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
++    char *a;
++    int n, i, i2, l, o, min_l = 11, strict = 0, end = 6, btz = 5, md;
++    struct tm tmp;
++    const char upper_z = 'Z', num_zero = '0', period = '.', minus = '-', plus = '+';
++    /*
++     * ASN1_STRING_FLAG_X509_TIME is used to enforce RFC 5280
++     * time string format, in which:
++     *
++     * 1. "seconds" is a 'MUST'
++     * 2. "Zulu" timezone is a 'MUST'
++     * 3. "+|-" is not allowed to indicate a time zone
++     */
++    if (d->type == V_ASN1_UTCTIME) {
++        if (d->flags & ASN1_STRING_FLAG_X509_TIME) {
++            min_l = 13;
++            strict = 1;
++        }
++    } else if (d->type == V_ASN1_GENERALIZEDTIME) {
++        end = 7;
++        btz = 6;
++        if (d->flags & ASN1_STRING_FLAG_X509_TIME) {
++            min_l = 15;
++            strict = 1;
++        } else {
++            min_l = 13;
++        }
++    } else {
++        return 0;
++    }
++
++    l = d->length;
++    a = (char *)d->data;
++    o = 0;
++    memset(&tmp, 0, sizeof(tmp));
++
++    /*
++     * GENERALIZEDTIME is similar to UTCTIME except the year is represented
++     * as YYYY. This stuff treats everything as a two digit field so make
++     * first two fields 00 to 99
++     */
++
++    if (l < min_l)
++        goto err;
++    for (i = 0; i < end; i++) {
++        if (!strict && (i == btz) && ((a[o] == upper_z) || (a[o] == plus) || (a[o] == minus))) {
++            i++;
++            break;
++        }
++        if (!ascii_isdigit(a[o]))
++            goto err;
++        n = a[o] - num_zero;
++        /* incomplete 2-digital number */
++        if (++o == l)
++            goto err;
++
++        if (!ascii_isdigit(a[o]))
++            goto err;
++        n = (n * 10) + a[o] - num_zero;
++        /* no more bytes to read, but we haven't seen time-zone yet */
++        if (++o == l)
++            goto err;
++
++        i2 = (d->type == V_ASN1_UTCTIME) ? i + 1 : i;
++
++        if ((n < min[i2]) || (n > max[i2]))
++            goto err;
++        switch (i2) {
++        case 0:
++            /* UTC will never be here */
++            tmp.tm_year = n * 100 - 1900;
++            break;
++        case 1:
++            if (d->type == V_ASN1_UTCTIME)
++                tmp.tm_year = n < 50 ? n + 100 : n;
++            else
++                tmp.tm_year += n;
++            break;
++        case 2:
++            tmp.tm_mon = n - 1;
++            break;
++        case 3:
++            /* check if tm_mday is valid in tm_mon */
++            if (tmp.tm_mon == 1) {
++                /* it's February */
++                md = mdays[1] + leap_year(tmp.tm_year + 1900);
++            } else {
++                md = mdays[tmp.tm_mon];
++            }
++            if (n > md)
++                goto err;
++            tmp.tm_mday = n;
++            determine_days(&tmp);
++            break;
++        case 4:
++            tmp.tm_hour = n;
++            break;
++        case 5:
++            tmp.tm_min = n;
++            break;
++        case 6:
++            tmp.tm_sec = n;
++            break;
++        }
++    }
++
++    /*
++     * Optional fractional seconds: decimal point followed by one or more
++     * digits.
++     */
++    if (d->type == V_ASN1_GENERALIZEDTIME && a[o] == period) {
++        if (strict)
++            /* RFC 5280 forbids fractional seconds */
++            goto err;
++        if (++o == l)
++            goto err;
++        i = o;
++        while ((o < l) && ascii_isdigit(a[o]))
++            o++;
++        /* Must have at least one digit after decimal point */
++        if (i == o)
++            goto err;
++        /* no more bytes to read, but we haven't seen time-zone yet */
++        if (o == l)
++            goto err;
++    }
++
++    /*
++     * 'o' will never point to '\0' at this point, the only chance
++     * 'o' can point to '\0' is either the subsequent if or the first
++     * else if is true.
++     */
++    if (a[o] == upper_z) {
++        o++;
++    } else if (!strict && ((a[o] == plus) || (a[o] == minus))) {
++        int offsign = a[o] == minus ? 1 : -1;
++        int offset = 0;
++
++        o++;
++        /*
++         * if not equal, no need to do subsequent checks
++         * since the following for-loop will add 'o' by 4
++         * and the final return statement will check if 'l'
++         * and 'o' are equal.
++         */
++        if (o + 4 != l)
++            goto err;
++        for (i = end; i < end + 2; i++) {
++            if (!ascii_isdigit(a[o]))
++                goto err;
++            n = a[o] - num_zero;
++            o++;
++            if (!ascii_isdigit(a[o]))
++                goto err;
++            n = (n * 10) + a[o] - num_zero;
++            i2 = (d->type == V_ASN1_UTCTIME) ? i + 1 : i;
++            if ((n < min[i2]) || (n > max[i2]))
++                goto err;
++            /* if tm is NULL, no need to adjust */
++            if (tm != NULL) {
++                if (i == end)
++                    offset = n * 3600;
++                else if (i == end + 1)
++                    offset += n * 60;
++            }
++            o++;
++        }
++        if (offset && !OPENSSL_gmtime_adj(&tmp, 0, offset * offsign))
++            goto err;
++    } else {
++        /* not Z, or not +/- in non-strict mode */
++        goto err;
++    }
++    if (o == l) {
++        /* success, check if tm should be filled */
++        if (tm != NULL)
++            *tm = tmp;
++        return 1;
++    }
++ err:
++    return 0;
++}
++
++int ASN1_TIME_to_tm(const ASN1_TIME *s, struct tm *tm)
++{
++    if (s == NULL) {
++        time_t now_t;
++
++        time(&now_t);
++        memset(tm, 0, sizeof(*tm));
++        if (OPENSSL_gmtime(&now_t, tm) != NULL)
++            return 1;
++        return 0;
++    }
++
++    return asn1_time_to_tm(tm, s);
++}
++
 +#endif /* OPENSSL_VERSION_NUMBER */
 +#else
  extern int asn1_generalizedtime_to_tm (struct tm *tm, const ASN1_GENERALIZEDTIME *d);
@@ -744,7 +953,7 @@ Index: mono/mono/btls/btls-util.c
  
  extern int64_t btls_timegm64 (const struct tm *date);
  
-@@ -80,3 +106,71 @@ mono_btls_debug_printf (BIO *bio, const
+@@ -80,3 +315,71 @@ mono_btls_debug_printf (BIO *bio, const
  
  	return ret;
  }
@@ -820,7 +1029,7 @@ Index: mono/mono/btls/btls-util.h
 ===================================================================
 --- mono.orig/mono/btls/btls-util.h
 +++ mono/mono/btls/btls-util.h
-@@ -62,7 +62,31 @@ mono_btls_util_asn1_time_to_ticks (ASN1_
+@@ -62,7 +62,32 @@ mono_btls_util_asn1_time_to_ticks (ASN1_
  int
  mono_btls_debug_printf (BIO *bio, const char *format, va_list args);
  
@@ -842,6 +1051,7 @@ Index: mono/mono/btls/btls-util.h
 +# else
 +#  define NO_RENEGOTIATION SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS
 +uint16_t SSL_CIPHER_get_protocol_id(const SSL_CIPHER *c);
++int ASN1_TIME_to_tm(const ASN1_TIME *s, struct tm *tm);
 +# endif
 +enum ssl_renegotiate_mode_t {
 +  ssl_renegotiate_never = 0,
