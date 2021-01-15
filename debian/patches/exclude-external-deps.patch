@@ -15,10 +15,10 @@ Subject: exclude-external-deps
  runtime/Makefile.am       |  2 +-
  9 files changed, 57 insertions(+), 16 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 6f406c2..3a487b8 100644
---- a/configure.ac
-+++ b/configure.ac
+Index: mono/configure.ac
+===================================================================
+--- mono.orig/configure.ac
++++ mono/configure.ac
 @@ -915,6 +915,17 @@ CFLAGS="$WARN $CFLAGS -g"
  CFLAGS_FOR_LIBGC="$CFLAGS_FOR_LIBGC -g"
  CPPFLAGS="$WARN $CPPFLAGS -g"
@@ -57,6 +57,15 @@ index 6f406c2..3a487b8 100644
  
  if test $csc_compiler = mcs; then
    CSC=$mcs_topdir/class/lib/build/mcs.exe
+@@ -6313,7 +6333,7 @@ else
+ 		mono_subdirs_ikvm_native=ikvm-native
+ 	fi
+ 
+-	MONO_SUBDIRS="po $mono_subdirs_libgc llvm mono $mono_subdirs_ikvm_native $mono_subdirs_support data runtime scripts man samples $mono_subdirs_tools $mono_subdirs_docs msvc acceptance-tests"
++	MONO_SUBDIRS="po $mono_subdirs_libgc llvm mono $mono_subdirs_ikvm_native $mono_subdirs_support data runtime scripts man samples $mono_subdirs_tools $mono_subdirs_docs acceptance-tests"
+ 	MONO_NOINST_SUBDIRS="$mono_subdirs_libgc"
+ fi
+ 
 @@ -6753,11 +6773,6 @@ AC_SUBST(CPPFLAGS)
  AC_SUBST(LDFLAGS)
  AC_SUBST(ZLIB_CFLAGS)
@@ -80,10 +89,10 @@ index 6f406c2..3a487b8 100644
      echo "RUNTIME = $mono_build_root/runtime/mono-wrapper" >> $mcs_topdir/build/config.make
      echo "JAY_CFLAGS = $JAY_CFLAGS" >> $mcs_topdir/build/config.make
      echo "VERSION = $VERSION" >> $mcs_topdir/build/config.make
-diff --git a/mcs/Makefile b/mcs/Makefile
-index 42c4496..0964453 100644
---- a/mcs/Makefile
-+++ b/mcs/Makefile
+Index: mono/mcs/Makefile
+===================================================================
+--- mono.orig/mcs/Makefile
++++ mono/mcs/Makefile
 @@ -1,6 +1,6 @@
  thisdir := .
  
@@ -92,7 +101,7 @@ index 42c4496..0964453 100644
  
  # Resgen is corlib specific tool
  
-@@ -19,7 +19,7 @@ testing_aot_full_interp_SUBDIRS := build class
+@@ -19,7 +19,7 @@ testing_aot_full_interp_SUBDIRS := build
  testing_aot_hybrid_SUBDIRS := build class
  testing_aot_full_SUBDIRS := build class
  binary_reference_assemblies_SUBDIRS := build class
@@ -110,10 +119,10 @@ index 42c4496..0964453 100644
  
  .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
  all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%
-diff --git a/mcs/build/executable.make b/mcs/build/executable.make
-index 29abac5..3fc63d0 100644
---- a/mcs/build/executable.make
-+++ b/mcs/build/executable.make
+Index: mono/mcs/build/executable.make
+===================================================================
+--- mono.orig/mcs/build/executable.make
++++ mono/mcs/build/executable.make
 @@ -49,7 +49,11 @@ ifdef TARGET_NET_REFERENCE
  LIB_REFS_MONO = $(call _FILTER_OUT,System,$(call _FILTER_OUT,mscorlib,$(LIB_REFS_ALL)))
  LIB_REFS_SYSTEM = $(filter-out $(LIB_REFS_MONO),$(LIB_REFS_ALL))
@@ -126,11 +135,11 @@ index 29abac5..3fc63d0 100644
  MCS_REFERENCES += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_MONO))
  else
  MCS_REFERENCES = $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_ALL))
-diff --git a/mcs/build/library.make b/mcs/build/library.make
-index ca9b193..9f91b81 100644
---- a/mcs/build/library.make
-+++ b/mcs/build/library.make
-@@ -28,16 +28,25 @@ LIB_REFS_MONO_ALIAS = $(call _FILTER_OUT,System,$(LIB_REFS_ALIAS))
+Index: mono/mcs/build/library.make
+===================================================================
+--- mono.orig/mcs/build/library.make
++++ mono/mcs/build/library.make
+@@ -28,16 +28,25 @@ LIB_REFS_MONO_ALIAS = $(call _FILTER_OUT
  LIB_REFS_NET_FULL = $(filter-out $(LIB_REFS_MONO_FULL),$(LIB_REFS_FULL))
  LIB_REFS_NET_ALIAS = $(filter-out $(LIB_REFS_MONO_ALIAS),$(LIB_REFS_ALIAS))
  
@@ -156,10 +165,10 @@ index ca9b193..9f91b81 100644
  
  LIB_MCS_FLAGS += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_FULL))
  LIB_MCS_FLAGS += $(patsubst %,-r:%.dll, $(subst =,=$(topdir)/class/lib/$(PROFILE_DIRECTORY)/,$(LIB_REFS_ALIAS)))
-diff --git a/mcs/class/Makefile b/mcs/class/Makefile
-index 1ab7f8b..41fea7f 100644
---- a/mcs/class/Makefile
-+++ b/mcs/class/Makefile
+Index: mono/mcs/class/Makefile
+===================================================================
+--- mono.orig/mcs/class/Makefile
++++ mono/mcs/class/Makefile
 @@ -385,7 +385,6 @@ net_4_x_parallel_dirs = \
  	Mono.Profiler.Log	\
  	Mono.Runtime.Tests	\
@@ -177,10 +186,10 @@ index 1ab7f8b..41fea7f 100644
  
  # No new makefiles for: System.Messaging, System.Web.Mobile,
  # System.ServiceProcess
-diff --git a/mcs/errors/Makefile b/mcs/errors/Makefile
-index dc1eb33..28ffa7b 100644
---- a/mcs/errors/Makefile
-+++ b/mcs/errors/Makefile
+Index: mono/mcs/errors/Makefile
+===================================================================
+--- mono.orig/mcs/errors/Makefile
++++ mono/mcs/errors/Makefile
 @@ -39,6 +39,12 @@ TEST_SUPPORT_FILES = \
  
  -include $(mcs_topdir)/build/config.make
@@ -194,7 +203,7 @@ index dc1eb33..28ffa7b 100644
  # mention all targets
  all-local $(STD_TARGETS:=-local):
  
-@@ -111,7 +117,7 @@ dlls/second/CS1703-lib.dll: dlls/second/CS1703-lib.cs
+@@ -111,7 +117,7 @@ dlls/second/CS1703-lib.dll: dlls/second/
  dlls/second/CS1705-lib.dll: dlls/second/CS1705-lib.cs
  	$(CSCOMPILE) /r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/mscorlib.dll /target:library /warn:0 /publicsign /keyfile:key.snk /out:$@ $<
  
@@ -203,10 +212,10 @@ index dc1eb33..28ffa7b 100644
  	mkdir -p $(dir $@)
  	cp $< $@
  
-diff --git a/mcs/tools/Makefile b/mcs/tools/Makefile
-index f774b6f..8818379 100644
---- a/mcs/tools/Makefile
-+++ b/mcs/tools/Makefile
+Index: mono/mcs/tools/Makefile
+===================================================================
+--- mono.orig/mcs/tools/Makefile
++++ mono/mcs/tools/Makefile
 @@ -52,7 +52,7 @@ net_4_5_dirs := \
  	gacutil
  
@@ -216,7 +225,7 @@ index f774b6f..8818379 100644
  monodroid_tools_SUBDIRS =
  monodroid_tools_PARALLEL_SUBDIRS = aprofutil cil-strip linker-analyzer mkbundle mdoc mono-symbolicate corcompare mono-api-diff mono-api-html pdb2mdb nunit-lite
  monodroid_SUBDIRS = nunit-lite
-@@ -68,7 +68,7 @@ net_4_x_PARALLEL_SUBDIRS = $(net_4_5_dirs)
+@@ -68,7 +68,7 @@ net_4_x_PARALLEL_SUBDIRS = $(net_4_5_dir
  wasm_tools_SUBDIRS =
  wasm_tools_PARALLEL_SUBDIRS = linker wasm-tuner cil-strip
  
@@ -225,11 +234,11 @@ index f774b6f..8818379 100644
  
  include ../build/rules.make
  
-diff --git a/mono/tests/Makefile.am b/mono/tests/Makefile.am
-index 4c3e967..8606535 100755
---- a/mono/tests/Makefile.am
-+++ b/mono/tests/Makefile.am
-@@ -2956,7 +2956,11 @@ generic-delegate2.2.exe: $(srcdir)/generic-delegate2.2.cs generic-delegate2-lib.
+Index: mono/mono/tests/Makefile.am
+===================================================================
+--- mono.orig/mono/tests/Makefile.am
++++ mono/mono/tests/Makefile.am
+@@ -2956,7 +2956,11 @@ generic-delegate2.2.exe: $(srcdir)/gener
  	$(MCS) -r:generic-delegate2-lib.2.dll -out:$@ $<
  
  bug-3903.exe: bug-3903.cs
@@ -241,11 +250,11 @@ index 4c3e967..8606535 100755
  
  EXTRA_DIST += appdomain-marshalbyref-assemblyload-MidAssembly.cs appdomain-marshalbyref-assemblyload-LeafAssembly.cs
  
-diff --git a/runtime/Makefile.am b/runtime/Makefile.am
-index 9e29cb5..b0bf0e7 100644
---- a/runtime/Makefile.am
-+++ b/runtime/Makefile.am
-@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper etc/mono/config
+Index: mono/runtime/Makefile.am
+===================================================================
+--- mono.orig/runtime/Makefile.am
++++ mono/runtime/Makefile.am
+@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper
  build_profiles = 
  
  if INSTALL_4_x
@@ -254,3 +263,15 @@ index 9e29cb5..b0bf0e7 100644
  net_profile = net_4_x
  endif
  
+Index: mono/m4/mono-output.m4
+===================================================================
+--- mono.orig/m4/mono-output.m4
++++ mono/m4/mono-output.m4
+@@ -51,7 +51,6 @@ AC_DEFUN([AC_MONO_OUTPUT], [
+ 		mono/eglib/eglib-config.h
+ 		mono/eglib/test/Makefile
+ 		m4/Makefile
+-		msvc/Makefile
+ 		mono/utils/jemalloc/Makefile
+ 		mono-uninstalled.pc
+ 		acceptance-tests/Makefile

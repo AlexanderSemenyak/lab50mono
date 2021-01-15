@@ -1,0 +1,64 @@
+Index: mono/data/config.in
+===================================================================
+--- mono.orig/data/config.in
++++ mono/data/config.in
+@@ -10,11 +10,11 @@
+ 	<dllmap dll="i:odbc32.dll" target="libiodbc.dylib" os="osx"/>
+ 	<dllmap dll="oci" target="libclntsh@libsuffix@" os="!windows"/>
+ 	<dllmap dll="db2cli" target="libdb2_36@libsuffix@" os="!windows"/>
+-	<dllmap dll="MonoPosixHelper" target="$mono_libdir/libMonoPosixHelper@libsuffix@" os="!windows" />
+-	<dllmap dll="System.Native" target="$mono_libdir/@MONO_NATIVE_LIBRARY_NAME@@libsuffix@" os="!windows" />
+-	<dllmap dll="System.Net.Security.Native" target="$mono_libdir/@MONO_NATIVE_LIBRARY_NAME@@libsuffix@" os="!windows" />
+-	<dllmap dll="System.Security.Cryptography.Native.Apple" target="$mono_libdir/@MONO_NATIVE_LIBRARY_NAME@@libsuffix@" os="osx" />
+-	<dllmap dll="libmono-btls-shared" target="$mono_libdir/libmono-btls-shared@libsuffix@" os="!windows" />
++	<dllmap dll="MonoPosixHelper" target="libMonoPosixHelper@libsuffix@" os="!windows" />
++	<dllmap dll="System.Native" target="@MONO_NATIVE_LIBRARY_NAME@@libsuffix@" os="!windows" />
++	<dllmap dll="System.Net.Security.Native" target="@MONO_NATIVE_LIBRARY_NAME@@libsuffix@" os="!windows" />
++	<dllmap dll="System.Security.Cryptography.Native.Apple" target="@MONO_NATIVE_LIBRARY_NAME@@libsuffix@" os="osx" />
++	<dllmap dll="libmono-btls-shared" target="libmono-btls-shared@libsuffix@" os="!windows" />
+ 	<dllmap dll="i:msvcrt" target="@LIBC@" os="!windows"/>
+ 	<dllmap dll="i:msvcrt.dll" target="@LIBC@" os="!windows"/>
+ 	<dllmap dll="sqlite" target="@SQLITE@" os="!windows"/>
+Index: mono/runtime/Makefile.am
+===================================================================
+--- mono.orig/runtime/Makefile.am
++++ mono/runtime/Makefile.am
+@@ -253,19 +253,28 @@ CLEANFILES = etc/mono/config
+ etc/mono/config: ../data/config Makefile $(symlinks)
+ 	cp $< $@
+ 	if test -d "$(abs_top_builddir)/support"; then \
+-		sed 's,target="$$mono_libdir/libMonoPosixHelper$(libsuffix)",target="$(abs_top_builddir)/support/libMonoPosixHelper.la",' $@ > $@.tmp \
++		sed 's,target="libMonoPosixHelper$(libsuffix)",target="$(abs_top_builddir)/support/libMonoPosixHelper.la",' $@ > $@.tmp \
+ 		 && mv $@.tmp $@ \
+ 		 ; \
+ 	else \
+ 		echo "Unknown directory '$(abs_top_builddir)/support'" && false; \
+ 	fi
+ 	if test -d "$(abs_top_builddir)/mono/native"; then \
+-		sed 's,target="$$mono_libdir/$(MONO_NATIVE_LIBRARY_NAME)$(libsuffix)",target="$(abs_top_builddir)/mono/native/$(MONO_NATIVE_LIBRARY_NAME).la",' $@ > $@.tmp \
++		sed 's,target="$(MONO_NATIVE_LIBRARY_NAME)$(libsuffix)",target="$(abs_top_builddir)/mono/native/$(MONO_NATIVE_LIBRARY_NAME).la",' $@ > $@.tmp \
+ 		 && mv $@.tmp $@ \
+ 		 ; \
+ 	else \
+ 		echo "Unknown directory '$(abs_top_builddir)/mono/native'" && false; \
+ 	fi
++if OPENSSL
++	if test -d "$(abs_top_builddir)/mono/btls"; then \
++		sed 's,target="libmono-btls-shared$(libsuffix)",target="$(abs_top_builddir)/mono/btls/.libs/libmono-btls-shared$(libsuffix)",' $@ > $@.tmp \
++		 && mv $@.tmp $@ \
++		 ; \
++	else \
++		echo "Unknown directory '$(abs_top_builddir)/mono/btls'"; \
++	fi
++else
+ 	if test -d "$(abs_top_builddir)/mono/btls/build-shared"; then \
+ 		sed 's,target="$$mono_libdir/libmono-btls-shared$(libsuffix)",target="$(abs_top_builddir)/mono/btls/build-shared/libmono-btls-shared$(libsuffix)",' $@ > $@.tmp \
+ 		 && mv $@.tmp $@ \
+@@ -273,6 +282,7 @@ etc/mono/config: ../data/config Makefile
+ 	else \
+ 		echo "Unknown directory '$(abs_top_builddir)/mono/btls/build-shared'"; \
+ 	fi
++endif
+ 	if test -n "$(libgdiplus_loc)"; then \
+ 		sed 's,target="$(libgdiplus_install_loc)",target="$(libgdiplus_loc)",' $@ > $@.tmp \
+ 		 && mv $@.tmp $@ \

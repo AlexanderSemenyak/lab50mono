@@ -3,127 +3,13 @@ Date: Sat, 26 Dec 2020 13:21:46 +0300
 Subject: Conditional boehm build
 
 ---
- mono/mini/Makefile.am    | 15 ++++++++++++---
- mono/mini/Makefile.am.in | 17 ++++++++++++++---
- 2 files changed, 26 insertions(+), 6 deletions(-)
+ mono/mini/Makefile.am.in | 29 ++++++++++++++++++++++++-----
+ 1 file changed, 24 insertions(+), 5 deletions(-)
 
-Index: mono/mono/mini/Makefile.am
-===================================================================
---- mono.orig/mono/mini/Makefile.am
-+++ mono/mono/mini/Makefile.am
-@@ -10,6 +10,10 @@ mtest=for_loop
- monodir=$(top_builddir)
- mono=$(if $(MONO_EXECUTABLE),$(MONO_EXECUTABLE),mono)
- 
-+export LANG=C
-+BUILD_DATE ?= $(shell date -u -d "@$${SOURCE_DATE_EPOCH:-$$(date +%s)}")
-+unexport LANG
-+
- if HOST_WIN32
- PLATFORM_PATH_SEPARATOR=;
- else
-@@ -50,9 +54,8 @@ LLVM_LDFLAGS=$(LLVM_LDFLAGS_INTERNAL) $(
- LLVM_LIBS=$(LLVM_LIBS_INTERNAL) $(LLVM_LIBS_EXTERNAL)
- 
- #$(mono_build_root)/llvm/llvm_config.mk:
--#ifneq (,"$(wildcard $(top_builddir)/llvm/Makefile)")
- #	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
--#endif
-+
- endif
- 
- endif # !ENABLE_MSVC_ONLY
-@@ -171,7 +174,10 @@ else
- if HOST_WIN32
- bin_PROGRAMS = $(boehm_binaries) $(sgen_binaries) monow
- else
--bin_PROGRAMS = $(boehm_binaries) $(sgen_binaries)
-+bin_PROGRAMS = $(sgen_binaries)
-+if SUPPORT_BOEHM
-+bin_PROGRAMS += $(boehm_binaries)
-+endif
- endif
- endif
- 
-@@ -182,10 +188,16 @@ noinst_PROGRAMS = mono
- endif
- 
- if DISABLE_EXECUTABLES
--shared_libraries = $(boehm_libraries) $(sgen_libraries)
-+shared_libraries = $(sgen_libraries)
-+if SUPPORT_BOEHM
-+shared_libraries += $(boehm_libraries)
-+endif
- else
- if SHARED_MONO
--shared_libraries = $(boehm_libraries) $(sgen_libraries)
-+shared_libraries = $(sgen_libraries)
-+if SUPPORT_BOEHM
-+shared_libraries += $(boehm_libraries)
-+endif
- endif
- endif
- 
-@@ -225,8 +237,10 @@ endif
- # we need this to prevent automake from generating a default mono_SOURCES = mono.c
- mono_SOURCES =
- 
-+if SUPPORT_BOEHM
- mono_boehm_SOURCES =
- mono_boehm_CFLAGS = $(AM_CFLAGS) @CXX_REMOVE_CFLAGS@
-+endif
- 
- AM_CPPFLAGS = $(LIBGC_CPPFLAGS)
- 
-@@ -237,12 +251,12 @@ mono_sgen_CFLAGS = $(AM_CFLAGS) @CXX_REM
- # link was done
- if SUPPORT_BOEHM
- buildver-boehm.h: libmini.la $(monodir)/mono/metadata/libmonoruntime.la
--	@echo "const char *build_date = \"`date`\";" > buildver-boehm.h
-+	@echo "const char *build_date = \"$(BUILD_DATE)\";" > buildver-boehm.h
- libmain_a-main.$(OBJEXT): buildver-boehm.h
- endif
- 
- buildver-sgen.h: libmini.la $(monodir)/mono/metadata/libmonoruntimesgen.la $(monodir)/mono/sgen/libmonosgen.la
--	@echo "const char *build_date = \"`date`\";" > buildver-sgen.h
-+	@echo "const char *build_date = \"$(BUILD_DATE)\";" > buildver-sgen.h
- 
- libmain_a-main-sgen.$(OBJEXT): buildver-sgen.h
- 
-@@ -274,6 +288,7 @@ else
- LLVMMONOF=$(LLVM_LIBS) $(LLVM_LDFLAGS)
- endif
- 
-+if SUPPORT_BOEHM
- mono_boehm_LDADD = \
- 	libmain_a-main.$(OBJEXT) \
- 	$(MONO_LIB)		\
-@@ -286,6 +301,7 @@ mono_boehm_LDADD = \
- 
- mono_boehm_LDFLAGS = \
- 	$(static_flags) $(monobinldflags) $(monobin_platform_ldflags) 
-+endif
- 
- mono_sgen_LDADD = \
- 	libmain_a-main-sgen.$(OBJEXT) \
-@@ -769,11 +785,13 @@ endif
- libmini_la_SOURCES = $(common_sources) $(llvm_sources) $(llvm_runtime_sources) $(arch_sources) $(os_sources) $(netcore_sources)
- libmini_la_CFLAGS = $(AM_CFLAGS) @CXX_ADD_CFLAGS@
- 
-+if SUPPORT_BOEHM
- libmonoboehm_2_0_la_SOURCES =
- libmonoboehm_2_0_la_CFLAGS = $(mono_boehm_CFLAGS) @CXX_ADD_CFLAGS@
- 
- libmonoboehm_2_0_la_LIBADD = libmini.la $(interp_libs_with_mini) $(dbg_libs_with_mini) $(boehm_libs) $(LIBMONO_DTRACE_OBJECT) $(LLVMMONOF)
- libmonoboehm_2_0_la_LDFLAGS = $(libmonoldflags) $(monobin_platform_ldflags) 
-+endif
- 
- libmonosgen_2_0_la_SOURCES =
- libmonosgen_2_0_la_CFLAGS = $(mono_sgen_CFLAGS) @CXX_ADD_CFLAGS@
-Index: mono/mono/mini/Makefile.am.in
-===================================================================
---- mono.orig/mono/mini/Makefile.am.in
-+++ mono/mono/mini/Makefile.am.in
+diff --git a/mono/mini/Makefile.am.in b/mono/mini/Makefile.am.in
+index fb033b0..ae10d2b 100755
+--- a/mono/mini/Makefile.am.in
++++ b/mono/mini/Makefile.am.in
 @@ -10,6 +10,10 @@ mtest=for_loop
  monodir=$(top_builddir)
  mono=$(if $(MONO_EXECUTABLE),$(MONO_EXECUTABLE),mono)
@@ -177,7 +63,7 @@ Index: mono/mono/mini/Makefile.am.in
  
  AM_CPPFLAGS = $(LIBGC_CPPFLAGS)
  
-@@ -236,12 +251,12 @@ mono_sgen_CFLAGS = $(AM_CFLAGS) @CXX_REM
+@@ -236,12 +251,12 @@ mono_sgen_CFLAGS = $(AM_CFLAGS) @CXX_REMOVE_CFLAGS@
  # link was done
  if SUPPORT_BOEHM
  buildver-boehm.h: libmini.la $(monodir)/mono/metadata/libmonoruntime.la

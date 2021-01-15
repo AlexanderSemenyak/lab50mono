@@ -192,8 +192,8 @@ if (defined($dh{INTERNAL_MONO_FLAG}) ||
     (defined($ARGV[0]) && $ARGV[0] eq "internal-mono")) {
     $clr = "mono";
     $cli_parser = "$pwd/debian/tmp/usr/bin/mono $pwd/debian/tmp/usr/lib/mono/4.5/ikdasm.exe";
-    $cli_parser_paths = "MONO_CONFIG=$pwd/debian/tmp/etc/mono/config LD_LIBRARY_PATH=$pwd/debian/tmp/usr/lib MONO_PATH=$pwd/debian/tmp/usr/lib/mono/4.5 MONO_GAC_PREFIX=$pwd/debian/tmp/usr/lib/mono/gac ";
-    $cli_version = `LD_LIBRARY_PATH=$pwd/debian/tmp/usr/lib $pwd/debian/tmp/usr/bin/mono --version 2>&1`;
+    $cli_parser_paths = "MONO_CONFIG=$pwd/debian/tmp/etc/mono/config LD_LIBRARY_PATH=$pwd/debian/tmp/usr/lib:\$LD_LIBRARY_PATH MONO_PATH=$pwd/debian/tmp/usr/lib/mono/4.5 MONO_GAC_PREFIX=$pwd/debian/tmp/usr/lib/mono/gac ";
+    $cli_version = `LD_LIBRARY_PATH=$pwd/debian/tmp/usr/lib:\$LD_LIBRARY_PATH $pwd/debian/tmp/usr/bin/mono --version 2>&1`;
     verbose_print("Will use built Mono (debian/tmp/usr/bin/ikdasm) for CIL parsing.");
 } elsif (-x "/usr/bin/ikdasm") {
     $clr = "mono";
@@ -260,7 +260,7 @@ close($fh);
 
 verbose_print("Loading shlibs...");
 my %shlibdata;
-open($fh, "cat /var/lib/dpkg/info/*.shlibs $pwd/debian/shlibs.local $pwd/debian/*/DEBIAN/shlibs 2> /dev/null |");
+open($fh, "cat $pwd/debian/*.shlibs /var/lib/dpkg/info/*.shlibs $pwd/debian/*/DEBIAN/shlibs 2> /dev/null |");
 while (<$fh>) {
   /(\S+)\s+(\S+)\s+(\w.*)\n?/;
   my ($soname, $soversion, $dependency);
@@ -519,7 +519,7 @@ sub resolveOverride {
       $type = $1;
     } elsif ($1 eq "ignores") {
     } else {
-      warning("Warning: unknown override type: $1 in: '$override' for: $package!");
+      warning("unknown override type: $1 in: '$override' for: $package");
     }
        
     if (defined($2)) {
@@ -576,7 +576,7 @@ sub resolveClilibRefs {
       $key = $ver . "__" . lc($key);
       my $compat = "$name/$key";
       if (!defined($clilibdata{$compat})) {
-        warning("Warning: No Debian dependency data for $name ($key)!");
+        warning("No Debian dependency data for $name ($key)");
       } else {
         my $pkgref = $clilibdata{$compat};
         my %overriddenRef = resolveOverride($package, $pkgref);
@@ -603,7 +603,7 @@ sub resolveClilibRefs {
           # TODO: check cli_version for >= 3.0 and fallback to needs_net_4_0
           $needs_net_4_5 = 1;
         } else {
-          warning("Warning: Unknown mscorlib version: $ver!");
+          warning("Unknown mscorlib version: $ver");
         }
       } 
     }
@@ -694,7 +694,7 @@ sub resolveShlibRefs {
        verbose_print("Resolved moduleref to private library lib" . $moduleref . ".so");
        next;
      } else {
-       warning("Warning: Could not resolve moduleref: $moduleref for: $assembly_filename!");
+       warning("Could not resolve moduleref: $moduleref for: $assembly_filename ($package)");
        next;
      }
  
@@ -720,7 +720,7 @@ sub resolveShlibRefs {
            }
          }
          if (!defined($pkgref)) {
-           warning("Warning: Missing shlibs entry: $target or $moduleref for: $assembly_filename!");
+           warning("Missing shlibs entry: $target or $moduleref for: $assembly_filename ($package)");
          }
        } else {
          verbose_print("Found private library $target for $moduleref");
@@ -728,10 +728,12 @@ sub resolveShlibRefs {
        }
      }
 
-     my %overriddenRef = resolveOverride($package, $pkgref);
-     push(@{$ret{depends}},    $overriddenRef{depends});
-     push(@{$ret{recommends}}, $overriddenRef{recommends});
-     push(@{$ret{suggests}},   $overriddenRef{suggests});
+     if (defined($pkgref)) {
+       my %overriddenRef = resolveOverride($package, $pkgref);
+       push(@{$ret{depends}},    $overriddenRef{depends});
+       push(@{$ret{recommends}}, $overriddenRef{recommends});
+       push(@{$ret{suggests}},   $overriddenRef{suggests});
+     }
    } 
    close(F);
 

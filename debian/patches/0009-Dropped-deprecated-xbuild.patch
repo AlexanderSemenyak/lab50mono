@@ -6,10 +6,10 @@ Subject: Dropped deprecated xbuild
  mcs/tools/Makefile | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/mcs/tools/Makefile b/mcs/tools/Makefile
-index 8818379..2c9c7cf 100644
---- a/mcs/tools/Makefile
-+++ b/mcs/tools/Makefile
+Index: mono/mcs/tools/Makefile
+===================================================================
+--- mono.orig/mcs/tools/Makefile
++++ mono/mcs/tools/Makefile
 @@ -12,7 +12,6 @@ net_4_5_dirs := \
  	mono-xsd	\
  	resgen		\
@@ -18,3 +18,29 @@ index 8818379..2c9c7cf 100644
  	csharp		\
  	corcompare	\
  	mono-api-diff \
+Index: mono/runtime/Makefile.am
+===================================================================
+--- mono.orig/runtime/Makefile.am
++++ mono/runtime/Makefile.am
+@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper
+ build_profiles = 
+ 
+ if INSTALL_4_x
+-build_profiles += net_4_x xbuild_12 xbuild_14
++build_profiles += net_4_x
+ net_profile = net_4_x
+ endif
+ 
+Index: mono/mcs/Makefile
+===================================================================
+--- mono.orig/mcs/Makefile
++++ mono/mcs/Makefile
+@@ -44,7 +44,7 @@ dir-check:
+ 
+ # fun specialty targets
+ 
+-PROFILES = net_4_x xbuild_12 xbuild_14
++PROFILES = net_4_x
+ 
+ .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
+ all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%

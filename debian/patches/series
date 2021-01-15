@@ -8,3 +8,4 @@ fix-tests.patch
 0008-Using-external-jay-tool.patch
 0009-Dropped-deprecated-xbuild.patch
 0010-Conditional-boehm-build.patch
+0011-fix-multiarch-build.patch

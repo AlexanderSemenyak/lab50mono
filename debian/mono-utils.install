@@ -3,7 +3,5 @@ usr/bin/peverify
 usr/bin/monodis		/usr/bin/
 usr/bin/mono-find-provides
 usr/bin/mono-find-requires
-debian/man/pedump.1
-debian/man/mono-find-provides.1
-debian/man/mono-find-requires.1
 usr/share/man/man1/monodis.1
+usr/share/man/man1/mprof-report.1
