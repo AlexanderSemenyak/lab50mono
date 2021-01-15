@@ -12,6 +12,10 @@ Files-Excluded: external/roslyn-binaries
   external/illinker-test-assets
   external/xunit-binaries
   mcs/packages
+  sdks
+  packaging
+  msvc
+  eng
 
 Files: *
 Copyright: © 2011-2020 Xamarin Inc (http://www.xamarin.com)

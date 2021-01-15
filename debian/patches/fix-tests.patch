@@ -4,46 +4,14 @@ Subject: fix-tests
 
 ===================================================================
 ---
- mcs/tools/nunit-lite/Makefile                      |   8 +
- .../NUnitLite/AndroidTestAssemblyRunner.cs         | 191 ++++++++++
- .../nunit-lite/NUnitLite/BabysitterSupport.cs      | 113 ++++++
- mcs/tools/nunit-lite/NUnitLite/Makefile            |  16 +
- mcs/tools/nunit-lite/NUnitLite/Test.cs             |  94 +++++
- mcs/tools/nunit-lite/NUnitLite/TestMessage.cs      |  34 ++
- mcs/tools/nunit-lite/NUnitLite/TestResult.cs       | 107 ++++++
- .../NUnitLite/monodroid_nunitlite.dll.sources      |   2 +
- .../monodroid_tools_nunitlite.dll.sources          |   2 +
- mcs/tools/nunit-lite/NUnitLite/nunitlite.csproj    | 407 +++++++++++++++++++++
- .../nunit-lite/NUnitLite/nunitlite.dll.sources     | 272 ++++++++++++++
- mcs/tools/nunit-lite/nunit-lite-console/Console.cs |  84 +++++
- mcs/tools/nunit-lite/nunit-lite-console/Makefile   |  13 +
- .../nunit-lite-console/nunit-lite-console.csproj   |  72 ++++
- .../nunit-lite-console.exe.config.tmpl             |  14 +
- .../nunit-lite-console.exe.sources                 |   1 +
- mono/unit-tests/Makefile.am                        |   8 +-
- 17 files changed, 1434 insertions(+), 4 deletions(-)
- create mode 100644 mcs/tools/nunit-lite/Makefile
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/AndroidTestAssemblyRunner.cs
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/BabysitterSupport.cs
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/Makefile
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/Test.cs
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/TestMessage.cs
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/TestResult.cs
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/monodroid_nunitlite.dll.sources
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/monodroid_tools_nunitlite.dll.sources
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/nunitlite.csproj
- create mode 100644 mcs/tools/nunit-lite/NUnitLite/nunitlite.dll.sources
- create mode 100644 mcs/tools/nunit-lite/nunit-lite-console/Console.cs
- create mode 100644 mcs/tools/nunit-lite/nunit-lite-console/Makefile
- create mode 100644 mcs/tools/nunit-lite/nunit-lite-console/nunit-lite-console.csproj
- create mode 100644 mcs/tools/nunit-lite/nunit-lite-console/nunit-lite-console.exe.config.tmpl
- create mode 100644 mcs/tools/nunit-lite/nunit-lite-console/nunit-lite-console.exe.sources
+ mono/unit-tests/Makefile.am | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Index: mono/mono/unit-tests/Makefile.am
-===================================================================
---- mono.orig/mono/unit-tests/Makefile.am
-+++ mono/mono/unit-tests/Makefile.am
-@@ -95,18 +95,18 @@ test_mono_handle_LDFLAGS = $(test_ldflag
+diff --git a/mono/unit-tests/Makefile.am b/mono/unit-tests/Makefile.am
+index 85fff69..a21af8b 100644
+--- a/mono/unit-tests/Makefile.am
++++ b/mono/unit-tests/Makefile.am
+@@ -95,18 +95,18 @@ test_mono_handle_LDFLAGS = $(test_ldflags)
  
  test_mono_callspec_SOURCES = main.c
  test_mono_callspec_CFLAGS = $(AM_CFLAGS) -DMAIN=test_mono_callspec_main

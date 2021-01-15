@@ -7,10 +7,11 @@
 /usr/lib/*/libMonoPosixHelper.so
 /usr/lib/*/libMonoSupportW.so
 /usr/lib/*/libmono-native.so*
+/usr/lib/*/libmono-btls-shared.so*
 /usr/bin/mono-hang-watchdog
 debian/mono-runtime-common.png /usr/share/pixmaps
 debian/mono-runtime-common.desktop /usr/share/applications
 debian/mono-runtime-terminal.desktop /usr/share/applications
+usr/bin/mono
 usr/share/man/man1/mono.1
 usr/share/man/man5/mono-config.5
-debian/man/cli-wrapper.1

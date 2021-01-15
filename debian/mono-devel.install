@@ -169,7 +169,6 @@ usr/bin/sgen
 usr/bin/wsdl2
 usr/lib/mono/4.5/Facades/
 usr/share/man/man1/al.1
-debian/man/caspol.1
 usr/share/man/man1/lc.1
 usr/share/man/man1/aprofutil.1
 usr/share/man/man1/cccheck.1
@@ -206,3 +205,7 @@ usr/share/man/man1/xsd.1
 usr/share/man/man1/httpcfg.1
 usr/share/man/man1/mconfig.1
 usr/share/man/man1/sgen.1
+usr/share/man/man1/mono-configuration-crypto.1
+usr/share/man/man1/ccrewrite.1
+usr/share/man/man1/illinkanalyzer.1
+usr/share/man/man1/mono-api-info.1

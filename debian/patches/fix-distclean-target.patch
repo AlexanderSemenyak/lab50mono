@@ -5,10 +5,9 @@ Subject: fix-distclean-target
 ===================================================================
 ---
  mono/benchmark/Makefile.am | 2 ++
- mono/mini/Makefile.am      | 9 +++++----
  mono/mini/Makefile.am.in   | 6 +++---
  mono/tests/Makefile.am     | 2 +-
- 4 files changed, 11 insertions(+), 8 deletions(-)
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/mono/benchmark/Makefile.am b/mono/benchmark/Makefile.am
 index ef6c05b..d15a4ad 100644
@@ -23,31 +22,6 @@ index ef6c05b..d15a4ad 100644
  %.exe: %.il
  	$(ILASM) $< /OUTPUT=$@
  
-diff --git a/mono/mini/Makefile.am b/mono/mini/Makefile.am
-index c193c9c..df7b050 100644
---- a/mono/mini/Makefile.am
-+++ b/mono/mini/Makefile.am
-@@ -43,15 +43,16 @@ sgen_libs = \
- 
- if ENABLE_LLVM
- 
--include $(mono_build_root)/llvm/llvm_config.mk
-+-include $(mono_build_root)/llvm/llvm_config.mk
- LLVM_CFLAGS=$(LLVM_CFLAGS_INTERNAL) $(LLVM_CFLAGS_EXTERNAL)
- LLVM_CXXFLAGS=$(LLVM_CXXFLAGS_INTERNAL) $(LLVM_CXXFLAGS_EXTERNAL)
- LLVM_LDFLAGS=$(LLVM_LDFLAGS_INTERNAL) $(LLVM_LDFLAGS_EXTERNAL)
- LLVM_LIBS=$(LLVM_LIBS_INTERNAL) $(LLVM_LIBS_EXTERNAL)
- 
--$(mono_build_root)/llvm/llvm_config.mk:
--	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
--
-+#$(mono_build_root)/llvm/llvm_config.mk:
-+#ifneq (,"$(wildcard $(top_builddir)/llvm/Makefile)")
-+#	$(MAKE) -C $(top_builddir)/llvm $(mono_build_root)/llvm/llvm_config.mk
-+#endif
- endif
- 
- endif # !ENABLE_MSVC_ONLY
 diff --git a/mono/mini/Makefile.am.in b/mono/mini/Makefile.am.in
 index c193c9c..fb033b0 100755
 --- a/mono/mini/Makefile.am.in
