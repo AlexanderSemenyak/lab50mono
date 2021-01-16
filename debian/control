@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 9),
 	g++ (>= 4:4.7) | g++-4.7,
 	cli-common-dev,
 	mono-llvm-dev [amd64 arm64 armhf i386 ppc64el],
-        mono-microsoft-net-compilers-toolset-cil | mono-roslyn,
+	mono-microsoft-net-compilers-toolset-cil-nodeps | mono-roslyn,
 	mono-jay,
 	tzdata,
 	libxml-dom-perl,
@@ -25,7 +25,7 @@ Build-Depends: debhelper (>= 9),
 	python,
 	automake,
 	clang <!nocheck>,
-        pkg-config
+	pkg-config
 Standards-Version: 3.9.6
 Homepage: http://www.mono-project.com/
 Vcs-Git: https://gitlab.com/gosmono/mono.git
