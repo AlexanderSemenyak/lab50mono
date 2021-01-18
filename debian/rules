@@ -123,25 +123,12 @@ dh_override_auto_install:
 	rm -f $(CURDIR)/debian/tmp/usr/bin/prj2make
 
 override_dh_install:
-	dh_install --list-missing #-Xusr/share/man -Xusr/share/jay -Xusr/lib/libmono -Xusr/lib/libMono -Xbin/monodis -Xbin/monograph -Xbin/mono-find-provides -Xbin/mono-find-requires -Xbin/pedump -Xbin/jay
+	dh_install --list-missing
+	dh_install -pmono-gac debian/mono.runtime-script /usr/share/cli-common/runtimes.d/mono
 
-	install -D -m 755 debian/mono.runtime-script debian/mono-gac/usr/share/cli-common/runtimes.d/mono
-
-	install -m 644 debian/System.Data.dll.config debian/libmono-system-data4.0-cil/usr/lib/mono/gac/System.Data/4.0.*/
-	install -m 644 debian/System.Drawing.dll.config debian/libmono-system-drawing4.0-cil/usr/lib/mono/gac/System.Drawing/4.0.*/
-	install -m 644 debian/System.Windows.Forms.dll.config debian/libmono-system-windows-forms4.0-cil/usr/lib/mono/gac/System.Windows.Forms/4.0.*/
-	install -m 644 debian/Mono.Cairo.dll.config debian/libmono-cairo4.0-cil/usr/lib/mono/gac/Mono.Cairo/4.0.*/
-	install -m 644 debian/Mono.WebBrowser.dll.config debian/libmono-webbrowser4.0-cil/usr/lib/mono/gac/Mono.WebBrowser/4.0.*/
-
-	install -m 644 debian/tmp/usr/bin/pedump debian/mono-utils/usr/bin/
 ifdef LLVM_ARCH
-	install -D -m 644 debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/libmono-llvm.a \
-		debian/mono-runtime-common/usr/lib/${DEB_HOST_MULTIARCH}/
+	dh_install -pmono-runtime-common /usr/lib/${DEB_HOST_MULTIARCH}/libmono-llvm.a
 endif
-
-	install -D -m 755 debian/detector/binfmt-detector-cli debian/mono-runtime/usr/lib/cli/binfmt-detector-cli
-	install -D -m 644 -o root -g root debian/cli.binfmt \
-	  debian/mono-runtime/usr/share/binfmts/cli
 
 override_dh_strip:
 	dh_strip -pmono-runtime-common -pmono-runtime-sgen $(EXTRA_STRIP) --dbg-package=mono-runtime-dbg

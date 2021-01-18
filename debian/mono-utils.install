@@ -1,7 +1,8 @@
-usr/bin/mprof-report
-usr/bin/peverify
-usr/bin/monodis		/usr/bin/
-usr/bin/mono-find-provides
-usr/bin/mono-find-requires
-usr/share/man/man1/monodis.1
-usr/share/man/man1/mprof-report.1
+/usr/bin/mprof-report
+/usr/bin/pedump
+/usr/bin/peverify
+/usr/bin/monodis
+/usr/bin/mono-find-provides
+/usr/bin/mono-find-requires
+/usr/share/man/man1/monodis.1
+/usr/share/man/man1/mprof-report.1
