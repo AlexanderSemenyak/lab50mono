@@ -1,3 +1,2 @@
-debian/System.Windows.Forms.dll.config /usr/lib/mono/gac/System.Windows.Forms/4.0.*/
 /usr/lib/mono/4.5/System.Windows.Forms.dll*
 /usr/lib/mono/gac/System.Windows.Forms/4.0.0.0__*/

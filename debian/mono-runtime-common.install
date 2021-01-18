@@ -13,4 +13,5 @@
 debian/mono-runtime-common.png /usr/share/pixmaps
 debian/mono-runtime-common.desktop /usr/share/applications
 debian/mono-runtime-terminal.desktop /usr/share/applications
-usr/share/man/man5/mono-config.5
+/usr/share/man/man5/mono-config.5
+/usr/share/binfmts/cli
