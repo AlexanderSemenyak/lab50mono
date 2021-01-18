@@ -108,6 +108,17 @@ dh_override_auto_install:
 	dh_auto_install
 	$(MAKE) -C mcs/jay install DESTDIR=$(CURDIR)/debian/tmp
 
+	install -m 644 debian/System.Data.dll.config debian/tmp/usr/lib/mono/gac/System.Data/4.0.*/
+	install -m 644 debian/System.Drawing.dll.config debian/tmp/usr/lib/mono/gac/System.Drawing/4.0.*/
+	install -m 644 debian/System.Windows.Forms.dll.config debian/tmp/usr/lib/mono/gac/System.Windows.Forms/4.0.*/
+	install -m 644 debian/Mono.Cairo.dll.config debian/tmp/usr/lib/mono/gac/Mono.Cairo/4.0.*/
+	install -m 644 debian/Mono.WebBrowser.dll.config debian/tmp/usr/lib/mono/gac/Mono.WebBrowser/4.0.*/
+
+	install -m 755 -d debian/tmp/usr/share/cli-common/runtimes.d
+	install -m 755 -d debian/tmp/usr/share/binfmts
+	install -m 644 debian/mono.runtime-script debian/tmp/usr/share/cli-common/runtimes.d/mono
+	install -m 644 debian/cli.binfmt debian/tmp/usr/share/binfmts/cli
+
 	# don't want docs of bundled libgc
 	rm -rf debian/tmp/usr/share/libgc-mono
 	# Mono.Security.Win32.dll is only useful on windows, as it wrap the win api
@@ -124,8 +135,6 @@ dh_override_auto_install:
 
 override_dh_install:
 	dh_install --list-missing
-	dh_install -pmono-gac debian/mono.runtime-script /usr/share/cli-common/runtimes.d/mono
-	dh_install -pmono-runtime-common debian/cli.binfmt /usr/share/binfmts/cli
 
 ifdef LLVM_ARCH
 	dh_install -pmono-runtime-common /usr/lib/${DEB_HOST_MULTIARCH}/libmono-llvm.a
