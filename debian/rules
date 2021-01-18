@@ -11,6 +11,8 @@ VERSION = $(shell dpkg-parsechangelog -l$(DEBIAN_DIR)/changelog | grep ^Vers | c
 UPVERSION = $(shell echo $(VERSION) | sed 's,-.*,,' | sed 's,+dfsg.*,,')
 NEXT_UPVERSION = $(shell perl -e '$$_=pop; s/(\d+)$$/$$1+1/e; print' $(UPVERSION))
 
+RUN_MONO = MONO_PATH=debian/tmp/usr/lib/mono/4.5 runtime/mono-wrapper
+
 $(info UPVERSION in [${UPVERSION}])
 $(info NEXT_UPVERSION in [${NEXT_UPVERSION}])
 
@@ -92,7 +94,8 @@ endif
 	LC_ALL=C $(MAKE) EXTERNAL_MCS=false EXTERNAL_MONO=false
 
 	$(MAKE) -C debian/detector
-	csc -target:exe -out:debian/MonoGetAssemblyName.exe \
+	$(RUN_MONO) /usr/lib/mono/4.5/csc.exe \
+	  -target:exe -out:debian/MonoGetAssemblyName.exe \
 	  debian/MonoGetAssemblyName.cs
 
 	chmod +x debian/dh_monoaot
