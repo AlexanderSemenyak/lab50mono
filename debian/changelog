@@ -1,7 +1,8 @@
-mono (6.12.0.114-0labft2) testing; urgency=medium
+mono (6.12.0.114-0labft2~rc1) testing; urgency=medium
 
   * Установка файлов перенесена из rules в *.install.
-  * Сборка с mono-microsoft-net-compilers-toolset вместо mono-devel.
+  * Сборка с mono-microsoft-net-compilers-toolset или mono-roslyn.
+  * Сборка с mono-reference-assemblies-cil или mono-devel.
 
  -- Лаборатория 50 <team@lab50.net>  Mon, 18 Jan 2021 19:07:36 +0300
 
