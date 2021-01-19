@@ -167,7 +167,6 @@ usr/bin/monop2
 usr/bin/resgen2
 usr/bin/sgen
 usr/bin/wsdl2
-usr/lib/mono/4.5/Facades/
 usr/share/man/man1/al.1
 usr/share/man/man1/lc.1
 usr/share/man/man1/aprofutil.1
