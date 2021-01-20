@@ -219,6 +219,3 @@ override_dh_shlibdeps:
 	debian/dh_clideps -i -l debian/tmp $(DH_INTERNAL_MONO_PARAM)
 	debian/dh_clideps -p mono-4.0-gac -r $(DH_INTERNAL_MONO_PARAM)
 
-override_dh_gencontrol:
-	dh_gencontrol -- -Vmono:upversion=$(UPVERSION) -Vmono:next-upversion=$(NEXT_UPVERSION)
-
