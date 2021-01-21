@@ -222,7 +222,7 @@ Index: mono/mono/btls/btls-bio.c
 +	BIO_meth_set_write(bio, mono_write);
 +	BIO_meth_set_create(bio, mono_new);
 +	BIO_meth_set_destroy(bio, mono_free);
-+#else // WITH_OPENSSL
++#else /* WITH_OPENSSL */
  	bio = BIO_new (&mono_method);
 +#endif
  	if (!bio)
@@ -265,7 +265,7 @@ Index: mono/mono/btls/btls-bio.c
  }
  
  int
-@@ -187,7 +211,7 @@ mono_btls_bio_hexdump (BIO *bio, const u
+@@ -187,13 +211,17 @@ mono_btls_bio_hexdump (BIO *bio, const u
  void
  mono_btls_bio_print_errors (BIO *bio)
  {
@@ -274,6 +274,16 @@ Index: mono/mono/btls/btls-bio.c
  }
  
  void
+ mono_btls_bio_free (BIO *bio)
+ {
++#ifdef WITH_OPENSSL
++	BIO_meth_free ((BIO_METHOD*)bio);
++#else
+ 	BIO_free (bio);
++#endif
+ }
+ 
+ BIO *
 Index: mono/mono/btls/btls-error.c
 ===================================================================
 --- mono.orig/mono/btls/btls-error.c
