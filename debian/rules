@@ -116,7 +116,7 @@ override_dh_auto_install:
 
 	install -m 755 -d debian/tmp/usr/share/cli-common/runtimes.d
 	install -m 755 -d debian/tmp/usr/share/binfmts
-	install -m 644 debian/mono.runtime-script debian/tmp/usr/share/cli-common/runtimes.d/mono
+	install -m 755 debian/mono.runtime-script debian/tmp/usr/share/cli-common/runtimes.d/mono
 	install -m 644 debian/cli.binfmt debian/tmp/usr/share/binfmts/cli
 
 	# don't want docs of bundled libgc
@@ -147,7 +147,7 @@ override_dh_strip:
 	debian/dh_clistrip -i --dbg-package=mono-dbg
 
 override_dh_fixperms:
-	dh_fixperms
+	dh_fixperms -X/usr/share/cli-common/runtimes.d/mono
 	debian/dh_clifixperms -i
 	DH_AUTOSCRIPTDIR=$(CURDIR)/debian debian/dh_monoaot -i
 
