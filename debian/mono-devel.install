@@ -153,6 +153,9 @@ usr/lib/mono/4.5/xsd.exe*
 usr/lib/mono/4.5/xsd.pdb
 usr/lib/*/mono/lldb/
 /usr/lib/mono/xbuild-frameworks
+/usr/lib/mono/xbuild/Current
+/usr/lib/mono/xbuild/deniedAssembliesList.txt
+/usr/lib/mono/xbuild/Microsoft
 usr/lib/mono/mono-configuration-crypto/
 usr/lib/mono-source-libs/getline.cs
 usr/lib/mono-source-libs/Options.cs

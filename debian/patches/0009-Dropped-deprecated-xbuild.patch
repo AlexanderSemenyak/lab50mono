@@ -33,11 +33,13 @@ Index: mono/mcs/tools/xbuild/Makefile
 ===================================================================
 --- mono.orig/mcs/tools/xbuild/Makefile
 +++ mono/mcs/tools/xbuild/Makefile
-@@ -4,16 +4,12 @@ include ../../build/rules.make
+@@ -3,17 +3,14 @@ SUBDIRS =
+ include ../../build/rules.make
  NO_TESTS = yes
  
- include xbuild.make
 +XBUILD_VERSION = 14.0
++FRAMEWORK_VERSION = 4.5
+ include xbuild.make
  
  LOCAL_MCS_FLAGS =
  LIB_REFS = $(XBUILD_FRAMEWORK) $(XBUILD_UTILITIES) $(XBUILD_ENGINE) $(XBUILD_MSTASKS) $(PARENT_PROFILE)System $(PARENT_PROFILE)System.Core
@@ -51,7 +53,7 @@ Index: mono/mcs/tools/xbuild/Makefile
  install-local: install-extras
  
  PORTABLE_TARGETS_SRC:=data/Portable/Targets
-@@ -34,10 +30,10 @@ install-extras: install-versioned-files
+@@ -34,10 +31,10 @@ install-extras: install-versioned-files
  endif
  
  #install files into xbuild's versioned locations
@@ -64,7 +66,7 @@ Index: mono/mcs/tools/xbuild/Makefile
  
  install-bin-data:
  	$(MKINSTALLDIRS) $(DESTDIR)$(XBUILD_BIN_DIR)/MSBuild
-@@ -203,3 +199,6 @@ EXTRA_DISTFILES = \
+@@ -203,3 +200,6 @@ EXTRA_DISTFILES = \
  	$(NUGET_BUILDTASKS_REPO_DIR)/src/Microsoft.NuGet.Build.Tasks/Microsoft.NuGet.props \
  	xbuild.make \
  	xbuild_test.make
