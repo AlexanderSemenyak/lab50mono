@@ -4,7 +4,7 @@
 /etc/mono/4.0/
 /etc/mono/4.5/
 /usr/share/mono-2.0/mono/cil/cil-opcodes.xml
-/usr/lib/mono/4.5/Facades/
+/usr/lib/mono/4.5/Facades/*.dll
 /usr/lib/*/libMonoPosixHelper.so
 /usr/lib/*/libMonoSupportW.so
 /usr/lib/*/libmono-native.so*

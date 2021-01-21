@@ -29,7 +29,7 @@ Build-Depends: debhelper (>= 9),
 	automake,
 	clang <!nocheck>,
 	pkg-config
-Standards-Version: 3.9.6
+Standards-Version: 4.5.1
 Homepage: http://www.mono-project.com/
 Vcs-Git: https://gitlab.com/gosmono/mono.git
 Vcs-Browser: https://gitlab.com/gosmono/mono
@@ -2450,10 +2450,10 @@ Recommends: mono-csharp-shell,
             mono-microsoft-net-compilers-toolset
 Depends: ${misc:Depends},
          ${cli:Depends},
-         mono-gac (= ${source:Version}),
-         libmono-cil-dev (= ${source:Version}),
-         libmono-2.0-dev (>= ${source:Version}),
-         ca-certificates-mono (= ${source:Version}),
+         mono-gac,
+         libmono-cil-dev,
+         libmono-2.0-dev,
+         ca-certificates-mono,
          pkg-config
 Description: Mono development tools
  Mono is a platform for running and developing applications based on the
