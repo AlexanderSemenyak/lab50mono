@@ -3,21 +3,6 @@ Date: Sat, 26 Dec 2020 11:13:50 +0300
 Subject: Dropped deprecated xbuild
 
 ---
- mcs/tools/Makefile | 1 -
- 1 file changed, 1 deletion(-)
-
-Index: mono/mcs/tools/Makefile
-===================================================================
---- mono.orig/mcs/tools/Makefile
-+++ mono/mcs/tools/Makefile
-@@ -12,7 +12,6 @@ net_4_5_dirs := \
- 	mono-xsd	\
- 	resgen		\
- 	wsdl		\
--	xbuild		\
- 	csharp		\
- 	corcompare	\
- 	mono-api-diff \
 Index: mono/runtime/Makefile.am
 ===================================================================
 --- mono.orig/runtime/Makefile.am
@@ -44,3 +29,32 @@ Index: mono/mcs/Makefile
  
  .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
  all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%
+Index: mono/mcs/tools/xbuild/Makefile
+===================================================================
+--- mono.orig/mcs/tools/xbuild/Makefile
++++ mono/mcs/tools/xbuild/Makefile
+@@ -9,11 +9,6 @@ LOCAL_MCS_FLAGS =
+ LIB_REFS = $(XBUILD_FRAMEWORK) $(XBUILD_UTILITIES) $(XBUILD_ENGINE) $(XBUILD_MSTASKS) $(PARENT_PROFILE)System $(PARENT_PROFILE)System.Core
+ PROGRAM = xbuild.exe
+ 
+-include ../../build/executable.make
+-
+-XBUILD_DIR=.
+-include $(XBUILD_DIR)/xbuild_test.make
+-
+ install-local: install-extras
+ 
+ PORTABLE_TARGETS_SRC:=data/Portable/Targets
+@@ -34,10 +29,10 @@ install-extras: install-versioned-files
+ endif
+ 
+ #install files into xbuild's versioned locations
+-install-versioned-files: install-bin-data install-nuget-imports
++install-versioned-files: install-nuget-imports
+ 
+ #install files that are only installed once across all xbuild versions
+-install-global-files: install-frameworks install-web-targets install-pcl-targets install-pcl5-framework install-nuget-targets install-msbuild-specific-files
++install-global-files: install-web-targets install-pcl-targets install-pcl5-framework install-nuget-targets install-msbuild-specific-files
+ 
+ install-bin-data:
+ 	$(MKINSTALLDIRS) $(DESTDIR)$(XBUILD_BIN_DIR)/MSBuild
