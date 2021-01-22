@@ -1,2 +1,3 @@
 debian/detector/binfmt-detector-cli /usr/lib/cli
+/usr/bin/mono-sgen
 /usr/share/man/man1/mono.1

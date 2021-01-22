@@ -141,9 +141,8 @@ ifdef LLVM_ARCH
 endif
 
 override_dh_strip:
-	dh_strip -pmono-runtime-common -pmono-runtime-sgen $(EXTRA_STRIP) --dbg-package=mono-runtime-dbg
-	dh_strip -plibmonosgen-2.0-1 --dbg-package=libmonosgen-2.0-1-dbg
-	dh_strip -a -Xbin/mono-sgen
+	dh_strip -pmono-runtime-common $(EXTRA_STRIP) --dbg-package=mono-runtime-dbg
+	dh_strip -a
 	debian/dh_clistrip -i --dbg-package=mono-dbg
 
 override_dh_fixperms:
@@ -215,7 +214,7 @@ override_dh_makeshlibs:
 
 override_dh_shlibdeps:
 #	dh_shlibdeps -a
-	dh_shlibdeps -a -Xlibmono-profiler-cov -ldebian/libmonosgen-2.0-1/usr/lib/x86_64-linux-gnu #-ldebian/libmonosgen-2.0-1/usr/lib
+	dh_shlibdeps -a -Xlibmono-profiler-cov
 	debian/dh_clideps -i -l debian/tmp $(DH_INTERNAL_MONO_PARAM)
 	debian/dh_clideps -p mono-4.0-gac -r $(DH_INTERNAL_MONO_PARAM)
 
