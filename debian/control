@@ -34,37 +34,19 @@ Homepage: http://www.mono-project.com/
 Vcs-Git: https://gitlab.com/gosmono/mono.git
 Vcs-Browser: https://gitlab.com/gosmono/mono
 
-Package: mono-runtime-common
-Provides: cli-runtime, cli-virtual-machine
-Architecture: any
-Replaces: mono-common (<< 2.4), mono-jit (<< 2.4), libmono0 (<< 2.4), mono-runtime (<< 3.2.1)
-Conflicts: mono-common (<< 2.4),
-           mono-jit (<< 2.4),
-           mono-1.0-runtime (<< 2.4),
-           mono-2.0-runtime (<< 2.4),
-           mono-runtime (<< 3.2.1)
-Suggests: xdg-utils | libgnome2-0, mono-llvm-support [armhf arm64]
-Recommends: binfmt-support (>= 1.1.2), mono-llvm-support [i386 amd64]
-Depends: ${shlibs:Depends},
-         ${misc:Depends},
-         binutils,
-         mono-gac (= ${source:Version})
-Description: Mono runtime - common files
- Mono is a platform for running and developing applications based on the
- ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
- Mono provides a complete CLR (Common Language Runtime) including compiler and
- runtime, which can produce and execute CIL (Common Intermediate Language)
- bytecode (aka assemblies), and a class library.
- .
- This package contains common files for the Virtual Machine, JIT (Just-in-Time) and
- AOT (Ahead-of-Time) code generator "mono".
- "mono" executes applications for the CLI (Common Language Infrastructure).
- Mono currently only supports the X86, PowerPC, ARM, S/390x, AMD64 and
- MIPS architectures. Optionally this package configures BINFMT support.
-
 Package: mono-runtime
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: cli-runtime, cli-virtual-machine
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         binutils,
+         mono-gac (= ${source:Version})
+Breaks: mono-runtime-common (<< 6.12.0.114-0labft7),
+ mono-runtime-sgen (<< 6.12.0.114-0labft7),
+ mono-runtime-boehm (<< 6.12.0.114-0labft7)
+Replaces: mono-runtime-common,
+ mono-runtime-sgen
+Recommends: binfmt-support (>= 1.1.2), mono-llvm-support
+Suggests: xdg-utils
 Description: Mono runtime
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -82,11 +64,11 @@ Description: Mono runtime
  collector.
 
 Package: mono-llvm-support
-Architecture: i386 amd64 armhf arm64
+Architecture: amd64 armhf arm64
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          mono-llvm-tools,
-         mono-runtime-common (= ${binary:Version})
+         mono-runtime (= ${binary:Version})
 Homepage: http://www.mono-project.com/Compacting_GC
 Description: Mono runtime - SGen
  Mono is a platform for running and developing applications based on the
@@ -106,9 +88,7 @@ Description: Mono runtime - SGen
 Package: mono-runtime-dbg
 Priority: extra
 Section: debug
-Architecture: amd64 armel arm64 armhf i386 mipsel kfreebsd-amd64 kfreebsd-i386 ppc64 ppc64el s390x
-Replaces: mono-jit-dbg (<< 2.4)
-Conflicts: mono-jit-dbg (<< 2.4)
+Architecture: any
 Depends: ${misc:Depends}
 Recommends: gdb
 Description: Mono runtime, debugging symbols
@@ -121,9 +101,9 @@ Description: Mono runtime, debugging symbols
  This package contains the debugging symbols of the Mono JIT/AOT compiler.
 
 Package: mono-utils
+Build-Profiles: <!cert>
 Provides: cil-disassembler
 Architecture: any
-Replaces: mono-mcs (<= 1.1.6-4)
 Depends: ${shlibs:Depends}, ${misc:Depends},
  libmono-corlib4.5-cil (= ${source:Version})
 Description: Mono utilities
@@ -138,8 +118,9 @@ Description: Mono utilities
 
 Package: ca-certificates-mono
 Architecture: all
-Pre-Depends: mono-runtime-common (>= 5.20)
-Depends: ${shlibs:Depends}, ${misc:Depends}, ${cli:Depends}, ca-certificates (>= 20121114)
+Pre-Depends: mono-runtime (>= 5.20)
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ ${cli:Depends}, ca-certificates (>= 20121114)
 Description: Common CA certificates (Mono keystore)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -151,10 +132,11 @@ Description: Common CA certificates (Mono keystore)
  Mono keystore.
 
 Package: mono-complete
-Architecture: amd64 armel arm64 armhf i386 mipsel kfreebsd-amd64 kfreebsd-i386 ppc64 ppc64el s390x
+Build-Profiles: <!cert>
+Architecture: any
 Depends: ${misc:Depends},
          mono-runtime (= ${binary:Version}),
-         mono-llvm-support (= ${binary:Version}) [amd64 i386],
+         mono-llvm-support (= ${binary:Version}) [amd64],
          libmono-2.0-1 (= ${binary:Version}),
          libmono-profiler (= ${binary:Version}),
          mono-utils (= ${binary:Version}),
@@ -187,8 +169,6 @@ Description: complete Mono runtime, development tools and all libraries
 
 Package: libmono-2.0-1
 Architecture: any 
-Replaces: libmono-dev (<= 1.1.6-4)
-Conflicts: mono-utils (<< 1.2.3.1-4)
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Mono JIT library (Default version)
  Shared library for Mono, used for embedding/hosting of the JIT.
@@ -200,7 +180,8 @@ Description: Mono JIT library (Default version)
  bytecode (aka assemblies), and a class library.
 
 Package: libmono-2.0-dev
-Architecture: amd64 armel arm64 armhf i386 mipsel kfreebsd-amd64 kfreebsd-i386 ppc64 ppc64el s390x
+Build-Profiles: <!cert>
+Architecture: amd64 armel arm64 armhf mipsel kfreebsd-amd64 kfreebsd-i386 ppc64 ppc64el s390x
 Depends: ${misc:Depends}
 Description: Mono JIT library - Development files (Default version)
  Header files and static libraries for libmono-2.0.
@@ -212,8 +193,8 @@ Description: Mono JIT library - Development files (Default version)
  bytecode (aka assemblies), and a class library.
 
 Package: libmono-profiler
+Build-Profiles: <!cert>
 Architecture: amd64 armel arm64 armhf i386 mipsel kfreebsd-amd64 kfreebsd-i386 ppc64 ppc64el s390x
-Replaces: mono-runtime (<< 2.4.2.3)
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: Mono profiler libraries
  Profiler libraries for Mono, used for profiling applications running on Mono.
@@ -226,17 +207,10 @@ Description: Mono profiler libraries
  bytecode (aka assemblies), and a class library.
 
 Package: libmono-cil-dev
+Build-Profiles: <!cert>
 Architecture: all
 Replaces: libmono-nunit2.2-cil (<< 2.4.3),
-          libmono-nunit2.4-cil (<< 2.4.3),
-          libmono-cairo2.0-cil (<< 2.4.3),
-          libmono-cecil-private-cil (<< 2.4.3),
-          libmono-system-web2.0-cil (<< 2.4.3),
-          libmono-wcf3.0-cil (<< 2.4.3),
-          libmono2.0-cil (<< 2.4.3),
-          mono-devel (<< 2.4.3),
-          libmono-dev (<< 2.10~)
-Breaks: libmono-dev (<< 2.10~)
+          libmono-nunit2.4-cil (<< 2.4.3)
 Conflicts: libmono-nunit2.2-cil,
            libmono-nunit2.4-cil
 Depends: ${misc:Depends},
@@ -420,8 +394,6 @@ Description: Mono.CompilerServices.SymbolWriter library (for CLI 4.0)
 
 Package: libmono-csharp4.0c-cil
 Provides: libmono-csharp4.0-cil, libmono-csharp4.0a-cil, libmono-csharp4.0b-cil
-Conflicts: libmono-csharp4.0-cil (<< 3.2.1), libmono-csharp4.0a-cil (<< 3.2.3), libmono-csharp4.0b-cil (<< 3.2.8)
-Replaces: libmono-csharp4.0-cil (<< 3.2.1), libmono-csharp4.0a-cil (<< 3.2.3), libmono-csharp4.0b-cil (<< 3.2.8)
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono.CSharp library (for CLI 4.0)
@@ -446,8 +418,8 @@ Description: Mono.Http library (for CLI 4.0)
  This package contains the Mono.Http library for CLI 4.0.
 
 Package: libmono-cecil-private-cil
+Build-Profiles: <!cert>
 Architecture: all
-Replaces: libmono1.0-cil (<< 2.4)
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono.Cecil library
  Mono is a platform for running and developing applications based on the
@@ -461,10 +433,7 @@ Description: Mono.Cecil library
 
 Package: libmono-webbrowser4.0-cil
 Architecture: all
-Conflicts: libmono-webbrowser0.5-cil
-Replaces: libmono-webbrowser0.5-cil
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Recommends: ${cli:Recommends}
 Description: Mono Web Browser library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -478,8 +447,7 @@ Description: Mono Web Browser library (for CLI 4.0)
 
 Package: libmono-management4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Management library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -493,8 +461,7 @@ Description: Mono Management library (for CLI 4.0)
 
 Package: libmono-messaging4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/SystemMessaging
 Description: Mono Messaging library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -524,8 +491,7 @@ Description: Mono Messaging RabbitMQ library (for CLI 4.0)
 
 Package: libmono-rabbitmq4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/SystemMessaging
 Description: Mono RabbitMQ.Client library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -539,8 +505,7 @@ Description: Mono RabbitMQ.Client library (for CLI 4.0)
 
 Package: libmono-simd4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://go-mono.com/docs/index.aspx?tlink=0@N%3aMono.Simd
 Description: Mono SIMD (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -572,8 +537,7 @@ Description: Mono SMDiagnostics Library (for CLI 4.0)
 
 Package: libmono-corlib4.5-cil
 Architecture: all
-Depends: ${misc:Depends},
-         mono-runtime (>= ${binary:Version})
+Depends: ${misc:Depends}, mono-runtime (>= ${binary:Version})
 Recommends: libmono-i18n-west4.0-cil
 Suggests: libmono-i18n4.0-all
 Description: Mono core library (for CLI 4.5)
@@ -736,8 +700,7 @@ Description: Mono I18N.West library (for CLI 4.0)
 
 Package: libmono-parallel4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono.Parallel library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -752,8 +715,7 @@ Package: libmono-system4.0-cil
 Architecture: all
 Suggests: ${cli:Suggests}
 Recommends: ca-certificates-mono (= ${source:Version})
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends},
          mono-runtime (>= ${binary:Version})
 Description: Mono System libraries (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -766,8 +728,7 @@ Description: Mono System libraries (for CLI 4.0)
 
 Package: libmono-system-componentmodel-composition4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends},
 Description: Mono System.ComponentModel.Composition library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -780,8 +741,7 @@ Description: Mono System.ComponentModel.Composition library (for CLI 4.0)
 
 Package: libmono-system-componentmodel-dataannotations4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends},
 Description: Mono System.ComponentModel.DataAnnotations library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -794,8 +754,7 @@ Description: Mono System.ComponentModel.DataAnnotations library (for CLI 4.0)
 
 Package: libmono-system-configuration4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends},
          mono-runtime (>= ${binary:Version})
 Description: Mono System.Configuration library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -808,8 +767,7 @@ Description: Mono System.Configuration library (for CLI 4.0)
 
 Package: libmono-system-configuration-install4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Configuration.Install library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -822,8 +780,7 @@ Description: Mono System.Configuration.Install library (for CLI 4.0)
 
 Package: libmono-system-core4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Core library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -836,8 +793,7 @@ Description: Mono System.Core library (for CLI 4.0)
 Package: libmono-system-drawing4.0-cil
 Architecture: all
 Suggests: ${cli:Suggests}
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Drawing library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -849,8 +805,7 @@ Description: Mono System.Drawing library (for CLI 4.0)
 
 Package: libmono-system-dynamic4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Dynamic library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -862,8 +817,7 @@ Description: Mono System.Dynamic library (for CLI 4.0)
 
 Package: libmono-system-enterpriseservices4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.EnterpriseServices library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -875,8 +829,7 @@ Description: Mono System.EnterpriseServices library (for CLI 4.0)
 
 Package: libmono-system-json4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Json library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -889,8 +842,7 @@ Description: Mono System.Json library (for CLI 4.0)
 
 Package: libmono-system-json-microsoft4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Json.Microsoft library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -903,8 +855,7 @@ Description: Mono System.Json.Microsoft library (for CLI 4.0)
 
 Package: libmono-system-management4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Management library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -916,8 +867,7 @@ Description: Mono System.Management library (for CLI 4.0)
 
 Package: libmono-system-net4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Net library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -929,8 +879,7 @@ Description: Mono System.Net library (for CLI 4.0)
 
 Package: libmono-system-net-http4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Net.Http library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -942,8 +891,7 @@ Description: Mono System.Net.Http library (for CLI 4.0)
 
 Package: libmono-system-net-http-formatting4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Net.Http.Formatting library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -955,8 +903,7 @@ Description: Mono System.Net.Http.Formatting library (for CLI 4.0)
 
 Package: libmono-system-numerics4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Numerics library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -968,8 +915,7 @@ Description: Mono System.Numerics library (for CLI 4.0)
 
 Package: libmono-system-numerics-vectors4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Numerics.Vectors library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -981,8 +927,7 @@ Description: Mono System.Numerics.Vectors library (for CLI 4.0)
 
 Package: libmono-system-security4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Recommends: libmono-btls-interface4.0-cil
 Description: Mono System.Security library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -995,8 +940,7 @@ Description: Mono System.Security library (for CLI 4.0)
 
 Package: libmono-btls-interface4.0-cil
 Architecture: any
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Mono.Btls.Interface library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1009,8 +953,7 @@ Description: Mono Mono.Btls.Interface library (for CLI 4.0)
 
 Package: libmono-system-serviceprocess4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.ServiceProcess library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1022,8 +965,7 @@ Description: Mono System.ServiceProcess library (for CLI 4.0)
 
 Package: libmono-system-threading-tasks-dataflow4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Threading.Tasks.Dataflow library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1036,8 +978,7 @@ Description: Mono System.Threading.Tasks.Dataflow library (for CLI 4.0)
 
 Package: libmono-system-transactions4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Transactions library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1049,8 +990,7 @@ Description: Mono System.Transactions library (for CLI 4.0)
 
 Package: libmono-system-xml4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Xml library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1062,8 +1002,7 @@ Description: Mono System.Xml library (for CLI 4.0)
 
 Package: libmono-system-xml-linq4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Xml.Linq library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1075,8 +1014,7 @@ Description: Mono System.Xml.Linq library (for CLI 4.0)
 
 Package: libmono-custommarshalers4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends},
+Depends: ${misc:Depends}, ${cli:Depends},
          mono-runtime (>= ${binary:Version})
 Description: Mono CustomMarshalers library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1089,8 +1027,7 @@ Description: Mono CustomMarshalers library (for CLI 4.0)
 
 Package: libmono-system-messaging4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Messaging library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1103,8 +1040,7 @@ Description: Mono System.Messaging library (for CLI 4.0)
 Package: libmono-security4.0-cil
 Architecture: all
 Recommends: ca-certificates-mono (= ${source:Version})
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Security library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1116,8 +1052,7 @@ Description: Mono Security library (for CLI 4.0)
 
 Package: libmono-data-tds4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Data Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1131,8 +1066,7 @@ Description: Mono Data Library (for CLI 4.0)
 Package: libmono-system-data4.0-cil
 Architecture: all
 Suggests: ${cli:Suggests}
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Data library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1144,8 +1078,7 @@ Description: Mono System.Data library (for CLI 4.0)
 
 Package: libmono-system-data-datasetextensions4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Data.DataSetExtensions library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1158,8 +1091,7 @@ Description: Mono System.Data.DataSetExtensions library (for CLI 4.0)
 
 Package: libmono-system-data-services4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.Data.Services library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1175,8 +1107,7 @@ Description: Mono System.Data.Services library (for CLI 4.0)
 
 Package: libmono-system-data-services-client4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.Data.Services.Client library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1192,8 +1123,7 @@ Description: Mono System.Data.Services.Client library (for CLI 4.0)
 
 Package: libmono-system-deployment4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Deployment library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1205,8 +1135,7 @@ Description: Mono System.Deployment library (for CLI 4.0)
 
 Package: libmono-system-data-linq4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Data.Linq Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1220,8 +1149,7 @@ Description: Mono System.Data.Linq Library (for CLI 4.0)
 
 Package: libmono-system-drawing-design4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Drawing.Design (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1233,8 +1161,7 @@ Description: Mono System.Drawing.Design (for CLI 4.0)
 
 Package: libmono-system-design4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Design Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1246,8 +1173,7 @@ Description: Mono System.Design Library (for CLI 4.0)
 
 Package: libmono-system-identitymodel4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.IdentityModel Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1263,8 +1189,7 @@ Description: Mono System.IdentityModel Library (for CLI 4.0)
 
 Package: libmono-system-identitymodel-selectors4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.IdentityModel.Selectors Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1282,8 +1207,7 @@ Package: libmono-system-reactive-core2.2-cil
 Conflicts: libmono-system-reactive-core2.1-cil
 Replaces: libmono-system-reactive-core2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Core Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1299,8 +1223,7 @@ Package: libmono-system-reactive-debugger2.2-cil
 Conflicts: libmono-system-reactive-debugger2.1-cil
 Replaces: libmono-system-reactive-debugger2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Debugger Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1316,8 +1239,7 @@ Package: libmono-system-reactive-experimental2.2-cil
 Conflicts: libmono-system-reactive-experimental2.1-cil
 Replaces: libmono-system-reactive-experimental2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Experimental Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1333,8 +1255,7 @@ Package: libmono-system-reactive-interfaces2.2-cil
 Conflicts: libmono-system-reactive-interfaces2.1-cil
 Replaces: libmono-system-reactive-interfaces2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Interfaces Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1350,8 +1271,7 @@ Package: libmono-system-reactive-linq2.2-cil
 Conflicts: libmono-system-reactive-linq2.1-cil
 Replaces: libmono-system-reactive-linq2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Linq Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1365,8 +1285,7 @@ Description: Mono System.Reactive.Linq Library (for CLI 4.5)
 
 Package: libmono-system-reactive-observable-aliases0.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Linq Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1382,8 +1301,7 @@ Package: libmono-system-reactive-platformservices2.2-cil
 Conflicts: libmono-system-reactive-platformservices2.1-cil
 Replaces: libmono-system-reactive-platformservices2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.PlatformServices Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1399,8 +1317,7 @@ Package: libmono-system-reactive-providers2.2-cil
 Conflicts: libmono-system-reactive-providers2.1-cil
 Replaces: libmono-system-reactive-providers2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Providers Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1416,8 +1333,7 @@ Package: libmono-system-reactive-runtime-remoting2.2-cil
 Conflicts: libmono-system-reactive-runtime-remoting2.1-cil
 Replaces: libmono-system-reactive-runtime-remoting2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Runtime.Remoting Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1433,8 +1349,7 @@ Package: libmono-system-reactive-windows-forms2.2-cil
 Conflicts: libmono-system-reactive-windows-forms2.1-cil
 Replaces: libmono-system-reactive-windows-forms2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Windows.Forms Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1450,8 +1365,7 @@ Package: libmono-system-reactive-windows-threading2.2-cil
 Conflicts: libmono-system-reactive-windows-threading2.1-cil
 Replaces: libmono-system-reactive-windows-threading2.1-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://rx.codeplex.com
 Description: Mono System.Reactive.Windows.Threading Library (for CLI 4.5)
  Mono is a platform for running and developing applications based on the
@@ -1465,8 +1379,7 @@ Description: Mono System.Reactive.Windows.Threading Library (for CLI 4.5)
 
 Package: libmono-system-reflection-context4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Reflection.Context library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1478,8 +1391,7 @@ Description: Mono System.Reflection.Context library (for CLI 4.0)
 
 Package: libmono-system-runtime-serialization4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.Runtime.Serialization Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1495,8 +1407,7 @@ Description: Mono System.Runtime.Serialization Library (for CLI 4.0)
 
 Package: libmono-system-runtime-serialization-formatters-soap4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Runtime.Serialization.Formatters.Soap Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1509,8 +1420,7 @@ Description: Mono System.Runtime.Serialization.Formatters.Soap Library (for CLI 
 
 Package: libmono-system-runtime-caching4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Runtime.Caching Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1522,8 +1432,7 @@ Description: Mono System.Runtime.Caching Library (for CLI 4.0)
 
 Package: libmono-system-runtime-durableinstancing4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Runtime.DurableInstancing Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1539,8 +1448,7 @@ Provides: libmono-system-servicemodel4.0-cil
 Conflicts: libmono-system-servicemodel4.0-cil (<< 3.2.3)
 Replaces: libmono-system-servicemodel4.0-cil (<< 3.2.3)
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.ServiceModel Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1556,8 +1464,7 @@ Description: Mono System.ServiceModel Library (for CLI 4.0)
 
 Package: libmono-system-servicemodel-activation4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.ServiceModel.Activation Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1573,8 +1480,7 @@ Description: Mono System.ServiceModel.Activation Library (for CLI 4.0)
 
 Package: libmono-system-servicemodel-discovery4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.ServiceModel.Discovery Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1590,8 +1496,7 @@ Description: Mono System.ServiceModel.Discovery Library (for CLI 4.0)
 
 Package: libmono-system-servicemodel-internals0.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.ServiceModel.Internals Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1607,8 +1512,7 @@ Description: Mono System.ServiceModel.Internals Library (for CLI 4.0)
 
 Package: libmono-system-servicemodel-routing4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://mono-project.com/WCF
 Description: Mono System.ServiceModel.Routing Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1788,8 +1692,7 @@ Description: Mono System.Web.Services (for CLI 4.0)
 
 Package: libmono-system-web-mvc3.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono ASP.NET MVC 3.0 Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1804,8 +1707,7 @@ Description: Mono ASP.NET MVC 3.0 Library (for CLI 4.0)
 
 Package: libmono-system-web-webpages2.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Web.WebPages (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1817,8 +1719,7 @@ Description: Mono System.Web.WebPages (for CLI 4.0)
 
 Package: libmono-system-web-webpages-deployment2.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Web.WebPages.Deployment (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1831,8 +1732,7 @@ Description: Mono System.Web.WebPages.Deployment (for CLI 4.0)
 
 Package: libmono-system-web-webpages-razor2.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Web.WebPages.Razor (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1865,8 +1765,7 @@ Provides: libmono-system-windows-forms-datavisualization4.0-cil
 Conflicts: libmono-system-windows-forms-datavisualization4.0-cil (<< 3.2.3)
 Replaces: libmono-system-windows-forms-datavisualization4.0-cil (<< 3.2.3)
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Windows.Forms.DataVisualization Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1879,8 +1778,7 @@ Description: Mono System.Windows.Forms.DataVisualization Library (for CLI 4.0)
 
 Package: libmono-system-workflow-activities4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Workflow.Activities library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1892,8 +1790,7 @@ Description: Mono System.Workflow.Activities library (for CLI 4.0)
 
 Package: libmono-system-workflow-componentmodel4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Workflow.ComponentModel library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1905,8 +1802,7 @@ Description: Mono System.Workflow.ComponentModel library (for CLI 4.0)
 
 Package: libmono-system-workflow-runtime4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Workflow.Runtime library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1918,8 +1814,7 @@ Description: Mono System.Workflow.Runtime library (for CLI 4.0)
 
 Package: libmono-system-xaml4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Homepage: http://www.mono-project.com/SystemXamlHacking
 Description: Mono System.Xaml Library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -1932,8 +1827,7 @@ Description: Mono System.Xaml Library (for CLI 4.0)
 
 Package: libmono-system-runtime4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.Runtime library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1945,8 +1839,7 @@ Description: Mono System.Runtime library (for CLI 4.0)
 
 Package: libmono-system-ldap4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.DirectoryServices library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1958,8 +1851,7 @@ Description: Mono System.DirectoryServices library (for CLI 4.0)
 
 Package: libmono-system-ldap-protocols4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono System.DirectoryServices.Protocols library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1972,8 +1864,7 @@ Description: Mono System.DirectoryServices.Protocols library (for CLI 4.0)
 
 Package: libmono-cairo4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Cairo library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1985,8 +1876,7 @@ Description: Mono Cairo library (for CLI 4.0)
 
 Package: libmono-sharpzip4.84-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono SharpZipLib library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -1998,8 +1888,7 @@ Description: Mono SharpZipLib library (for CLI 4.0)
 
 Package: libmono-db2-1.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono DB2 library
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2011,8 +1900,7 @@ Description: Mono DB2 library
 
 Package: libmono-oracle4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Oracle library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2024,8 +1912,7 @@ Description: Mono Oracle library (for CLI 4.0)
 
 Package: libmono-sqlite4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Sqlite library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2037,8 +1924,7 @@ Description: Mono Sqlite library (for CLI 4.0)
 
 Package: libmono-accessibility4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Accessibility library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2050,8 +1936,7 @@ Description: Mono Accessibility library (for CLI 4.0)
 
 Package: libmono-cscompmgd0.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono cscompmgd library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2063,8 +1948,7 @@ Description: Mono cscompmgd library (for CLI 4.0)
 
 Package: libmono-ldap4.0-cil
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono LDAP library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2075,9 +1959,9 @@ Description: Mono LDAP library (for CLI 4.0)
  This package contains the Mono LDAP library for CLI 4.0.
 
 Package: libmono-microsoft-build4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.Build library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2088,9 +1972,9 @@ Description: Mono Microsoft.Build library (for CLI 4.0)
  This package contains the Mono Microsoft.Build library for CLI 4.0.
 
 Package: libmono-microsoft-build-engine4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.Build.Engine library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2101,9 +1985,9 @@ Description: Mono Microsoft.Build.Engine library (for CLI 4.0)
  This package contains the Mono Microsoft.Build.Engine library for CLI 4.0.
 
 Package: libmono-microsoft-build-framework4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.Build.Framework library (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2114,6 +1998,7 @@ Description: Mono Microsoft.Build.Framework library (for CLI 4.0)
  This package contains the Mono Microsoft.Build.Framework library for CLI 4.0.
 
 Package: libmono-microsoft-build-tasks-v4.0-4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.Build.Tasks.v4.0 library (for CLI 4.0)
@@ -2126,6 +2011,7 @@ Description: Mono Microsoft.Build.Tasks.v4.0 library (for CLI 4.0)
  This package contains the Mono Microsoft.Build.Tasks.v4.0 library for CLI 4.0.
 
 Package: libmono-microsoft-build-utilities-v4.0-4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.Build.Utilities.v4.0 library (for CLI 4.0)
@@ -2139,6 +2025,7 @@ Description: Mono Microsoft.Build.Utilities.v4.0 library (for CLI 4.0)
  for CLI 4.0.
 
 Package: libmono-microsoft-csharp4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.CSharp library (for CLI 4.0)
@@ -2151,6 +2038,7 @@ Description: Mono Microsoft.CSharp library (for CLI 4.0)
  This package contains the Mono Microsoft.CSharp library version 4.0.
 
 Package: libmono-microsoft-visualc10.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Microsoft.VisualC library (for CLI 4.0)
@@ -2204,6 +2092,7 @@ Description: Mono Relaxng library (for CLI 4.0)
  This package contains the Mono Relaxng library for CLI 4.0.
 
 Package: libmono-debugger-soft4.0a-cil
+Build-Profiles: <!cert>
 Architecture: all
 Provides: libmono-debugger-soft4.0-cil
 Replaces: libmono-debugger-soft4.0-cil
@@ -2365,7 +2254,6 @@ Priority: extra
 Section: debug
 Architecture: all
 Depends: ${misc:Depends}
-Replaces: monodoc-base (<< 2.4)
 Description: Mono debugging symbols
  This package contains the debugging symbols of various libmono-* and mono-*
  packages.
@@ -2377,6 +2265,7 @@ Description: Mono debugging symbols
  bytecode (aka assemblies), and a class library.
 
 Package: mono-devel
+Build-Profiles: <!cert>
 Architecture: all
 Provides: resource-file-generator,
  assembly-linker,
@@ -2404,8 +2293,6 @@ Description: Mono development tools
 
 Package: mono-4.0-service
 Architecture: all
-Replaces: mono-1.0-service
-Conflicts: mono-1.0-service
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono service manager for CLI 4.0
  Mono is a platform for running and developing applications based on the
@@ -2434,9 +2321,7 @@ Description: Mono GAC tool
 
 Package: mono-4.0-gac
 Architecture: all
-Replaces: mono-gac (<< 2.0)
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Recommends: cli-common (>= 0.4.0)
 Description: Mono GAC tool (for CLI 4.0)
  Mono is a platform for running and developing applications based on the
@@ -2450,11 +2335,11 @@ Description: Mono GAC tool (for CLI 4.0)
  libraries, for CLI 4.0
 
 Package: mono-csharp-shell
+Build-Profiles: <!cert>
 Section: shells
 Architecture: all
 Homepage: http://www.mono-project.com/CsharpRepl
-Depends: ${misc:Depends},
-         ${cli:Depends}
+Depends: ${misc:Depends}, ${cli:Depends}
 Description: interactive C# shell
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2469,6 +2354,7 @@ Description: interactive C# shell
  http://www.mono-project.com/CsharpRepl
 
 Package: monodoc-base
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: shared MonoDoc binaries
@@ -2480,6 +2366,7 @@ Description: shared MonoDoc binaries
  programs like the documentation file compiler (assembler.exe aka "monodoc").
 
 Package: monodoc-manual
+Build-Profiles: <!nodoc>
 Architecture: all
 Section: doc
 Depends: ${misc:Depends}, monodoc-browser | monodoc-http | monodoc-viewer
@@ -2492,3 +2379,17 @@ Description: compiled XML documentation from the Mono project
  implementation.
  .
  This package contains the compiled XML documentation of MonoDoc.
+
+Package: mono-jay
+Build-Profiles: <!cert>
+Architecture: all
+Section: devel
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: port of Jay (Berkley Yacc for Java) to C#
+ Mono is a platform for running and developing applications based on the
+ ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
+ Mono provides a complete CLR (Common Language Runtime) including compiler and
+ runtime, which can produce and execute CIL (Common Intermediate Language)
+ bytecode (aka assemblies), and a class library.
+ .
+ This package mono-jay tool, port of Berkey Yacc for Java to C#.
