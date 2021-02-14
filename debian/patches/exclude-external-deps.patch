@@ -275,20 +275,82 @@ Index: mono/m4/mono-output.m4
  		mono/utils/jemalloc/Makefile
  		mono-uninstalled.pc
  		acceptance-tests/Makefile
-Index: mono/mcs/build/rules.make
+Index: mono/mcs/class/System.Net.Http.Formatting/Makefile
 ===================================================================
---- mono.orig/mcs/build/rules.make
-+++ mono/mcs/build/rules.make
-@@ -57,7 +57,12 @@ INTERNAL_CSC_LOCATION = $(CSC_LOCATION)
- # Using CSC_SDK_PATH_DISABLED for sanity check that all references have path specified
- INTERNAL_CSC = CSC_SDK_PATH_DISABLED= $(RUNTIME) $(RUNTIME_FLAGS) $(CSC_RUNTIME_FLAGS) $(INTERNAL_CSC_LOCATION)
+--- mono.orig/mcs/class/System.Net.Http.Formatting/Makefile
++++ mono/mcs/class/System.Net.Http.Formatting/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Net.Http.Formatting
+-SUBDIRS = 
++SUBDIRS =
++include ../../build/config.make
+ include ../../build/rules.make
  
-+ifdef USE_SYSTEM_MONO
-+RESGEN = resgen
-+else
- RESGEN = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/resgen.exe
-+endif
-+
- STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
- ILASM = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/ilasm.exe
- GENSOURCES = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/gensources.exe
+ LIBRARY = System.Net.Http.Formatting.dll
+Index: mono/mcs/class/System.Web.Http.SelfHost/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Web.Http.SelfHost/Makefile
++++ mono/mcs/class/System.Web.Http.SelfHost/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.Http.SelfHost
+-SUBDIRS = 
++SUBDIRS =
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.Http.SelfHost.dll
+Index: mono/mcs/class/System.Web.Http.WebHost/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Web.Http.WebHost/Makefile
++++ mono/mcs/class/System.Web.Http.WebHost/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.Http.WebHost
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.Http.WebHost.dll
+Index: mono/mcs/class/System.Web.Http/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Web.Http/Makefile
++++ mono/mcs/class/System.Web.Http/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.Http
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.Http.dll
+Index: mono/mcs/class/System.Web.WebPages.Deployment/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Web.WebPages.Deployment/Makefile
++++ mono/mcs/class/System.Web.WebPages.Deployment/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.WebPages.Deployment
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.WebPages.Deployment.dll
+Index: mono/mcs/class/System.Web.WebPages.Razor/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Web.WebPages.Razor/Makefile
++++ mono/mcs/class/System.Web.WebPages.Razor/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.WebPages.Razor
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.WebPages.Razor.dll
+Index: mono/mcs/class/System.Web.WebPages/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Web.WebPages/Makefile
++++ mono/mcs/class/System.Web.WebPages/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.WebPages
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.WebPages.dll

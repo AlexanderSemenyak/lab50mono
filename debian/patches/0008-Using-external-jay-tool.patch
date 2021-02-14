@@ -10,10 +10,10 @@ Subject: Using external jay tool
  mcs/mcs/Makefile                       | 2 +-
  5 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/mcs/class/Commons.Xml.Relaxng/Makefile b/mcs/class/Commons.Xml.Relaxng/Makefile
-index c508f06..d431350 100644
---- a/mcs/class/Commons.Xml.Relaxng/Makefile
-+++ b/mcs/class/Commons.Xml.Relaxng/Makefile
+Index: mono/mcs/class/Commons.Xml.Relaxng/Makefile
+===================================================================
+--- mono.orig/mcs/class/Commons.Xml.Relaxng/Makefile
++++ mono/mcs/class/Commons.Xml.Relaxng/Makefile
 @@ -27,7 +27,7 @@ EXTRA_DISTFILES = \
  	$(TEST_RESOURCE_FILES)
  
@@ -23,24 +23,11 @@ index c508f06..d431350 100644
  
  BUILT_SOURCES = Commons.Xml.Relaxng.Rnc/RncParser.cs
  
-diff --git a/mcs/class/Microsoft.Build/Makefile b/mcs/class/Microsoft.Build/Makefile
-index 932e596..624b4b6 100644
---- a/mcs/class/Microsoft.Build/Makefile
-+++ b/mcs/class/Microsoft.Build/Makefile
-@@ -29,7 +29,7 @@ EXTRA_DISTFILES = \
- EXPR_PARSER = Microsoft.Build.Internal/ExpressionParser
- 
- $(EXPR_PARSER).cs: $(EXPR_PARSER).jay $(topdir)/jay/skeleton.cs
--	(cd Microsoft.Build.Internal; $(topdir)/../jay/jay -ctv -o ExpressionParser.cs ExpressionParser.jay < $(topdir)/../jay/skeleton.cs )
-+	(cd Microsoft.Build.Internal; jay -ctv -o ExpressionParser.cs ExpressionParser.jay < $(topdir)/../jay/skeleton.cs )
- 
- BUILT_SOURCES = $(EXPR_PARSER).cs
- 
-diff --git a/mcs/class/Mono.CSharp/Makefile b/mcs/class/Mono.CSharp/Makefile
-index a1c1e63..3719f1f 100644
---- a/mcs/class/Mono.CSharp/Makefile
-+++ b/mcs/class/Mono.CSharp/Makefile
-@@ -30,7 +30,7 @@ LIB_MCS_FLAGS += $(REFERENCE_SOURCES_FLAGS)
+Index: mono/mcs/class/Mono.CSharp/Makefile
+===================================================================
+--- mono.orig/mcs/class/Mono.CSharp/Makefile
++++ mono/mcs/class/Mono.CSharp/Makefile
+@@ -30,7 +30,7 @@ LIB_MCS_FLAGS += $(REFERENCE_SOURCES_FLA
  BUILT_SOURCES = $(PROFILE)-parser.cs
  
  $(PROFILE)-parser.cs: $(topdir)/mcs/cs-parser.jay $(topdir)/jay/skeleton.cs
@@ -49,10 +36,10 @@ index a1c1e63..3719f1f 100644
  
  include ../../build/library.make
  
-diff --git a/mcs/ilasm/Makefile b/mcs/ilasm/Makefile
-index 434764e..8da8ead 100644
---- a/mcs/ilasm/Makefile
-+++ b/mcs/ilasm/Makefile
+Index: mono/mcs/ilasm/Makefile
+===================================================================
+--- mono.orig/mcs/ilasm/Makefile
++++ mono/mcs/ilasm/Makefile
 @@ -23,7 +23,7 @@ EXTRA_DISTFILES = \
  	$(wildcard tests/*.il)
  
@@ -62,10 +49,10 @@ index 434764e..8da8ead 100644
  
  include ../build/executable.make
  
-diff --git a/mcs/mcs/Makefile b/mcs/mcs/Makefile
-index dbf040a..d1d434d 100644
---- a/mcs/mcs/Makefile
-+++ b/mcs/mcs/Makefile
+Index: mono/mcs/mcs/Makefile
+===================================================================
+--- mono.orig/mcs/mcs/Makefile
++++ mono/mcs/mcs/Makefile
 @@ -32,7 +32,7 @@ BUILT_SOURCES = cs-parser.cs
  CLEAN_FILES += y.output
  
