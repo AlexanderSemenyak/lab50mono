@@ -9,12 +9,12 @@ Files-Excluded: external/roslyn-binaries
   external/boringssl
   external/cecil-legacy
   external/helix-binaries
+  external/llvm-project
   external/illinker-test-assets
   external/xunit-binaries
   mcs/packages
   sdks
   packaging
-  msvc
   eng
 
 Files: *

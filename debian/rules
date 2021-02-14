@@ -22,55 +22,56 @@ with_docs = $(if $(findstring nodoc, $(DEB_BUILD_OPTIONS)),,yes)
 with_devel = $(if $(findstring cert, $(DEB_BUILD_PROFILES)),,yes)
 
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
-	CONF_FLAGS += --build $(DEB_HOST_GNU_TYPE)
+  CONF_FLAGS += --build $(DEB_HOST_GNU_TYPE)
 else
-	CONF_FLAGS += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+  CONF_FLAGS += --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 endif
 
 ifeq ($(DEB_HOST_ARCH_OS), kfreebsd)
-        CONF_FLAGS += --enable-minimal=aot
+  CONF_FLAGS += --enable-minimal=aot
 endif
 
 ifeq ($(DEB_HOST_ARCH), armel)
-	CONF_FLAGS += --with-fpu=NONE
+  CONF_FLAGS += --with-fpu=NONE
 endif
 
 ifneq (,$(filter $(DEB_HOST_ARCH), arm64 armhf amd64))
-	LLVM_ARCH = true
-	CONF_FLAGS += --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/ 
-	EXTRA_STRIP := -pmono-llvm-support
+  LLVM_ARCH = true
+  CONF_FLAGS += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/ 
+  EXTRA_STRIP := -pmono-llvm-support
 endif
 
-ifneq ($(filter cert,$(DEB_BUILD_PROFILES)),)
-	CONFIGURE_PROFILE =
+ifeq ($(with_docs),yes)
+  CONFIGURE_PROFILE += --with-mcs-docs=yes
 else
-	CONFIGURE_PROFILE =
+  CONFIGURE_PROFILE += --with-mcs-docs=no
 endif
+
+#ifneq ($(filter cert,$(DEB_BUILD_PROFILES)),)
+#  CONFIGURE_PROFILE =
+#else
+#  CONFIGURE_PROFILE =
+#endif
 
 %:
 	dh $@
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(CONF_FLAGS) --prefix=/usr \
-		  --mandir=\$${prefix}/share/man \
-		  --infodir=\$${prefix}/share/info --sysconfdir=/etc \
-		  --with-ikvm-native=no \
-		  --disable-quiet-build \
-		  --disable-system-aot \
-		  --with-csc=roslyn \
-		  --disable-boehm \
-	          --with-sgen=yes --with-sgen-default-concurrent=yes \
-		  --disable-btls-lib --with-openssl \
-		  --with-core=yes --with-compiler-server=no --with-system-mono \
-		  $(CONFIGURE_PROFILE)
+		--mandir=\$${prefix}/share/man \
+		--infodir=\$${prefix}/share/info --sysconfdir=/etc \
+		--with-ikvm-native=no \
+		--disable-quiet-build \
+		--disable-system-aot \
+		--with-csc=roslyn \
+		--disable-boehm \
+		--with-sgen=yes --with-sgen-default-concurrent=yes \
+		--disable-btls-lib --with-openssl \
+		--with-core=yes --with-compiler-server=no --with-system-mono \
+		$(CONFIGURE_PROFILE)
 
 override_dh_auto_build:
-	dh_testdir
-#ifdef LLVM_ARCH
-#	$(MAKE) -C llvm
-#endif
-	$(MAKE) -C mono
-	LC_ALL=C $(MAKE) EXTERNAL_MCS=false EXTERNAL_MONO=false
+	dh_auto_build
 
 	$(MAKE) -C debian/detector
 	csc -target:exe -out:debian/MonoGetAssemblyName.exe \

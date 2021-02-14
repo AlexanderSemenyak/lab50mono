@@ -1,7 +1,9 @@
-mono (6.12.0.114-0labft7~rc1) UNRELEASED; urgency=medium
+mono (6.12.0.114-0labft7~rc2) UNRELEASED; urgency=medium
 
   * Объединены пакеты mono-runtime-common и mono-runtime.
   * Уровень debhelper повышен до 10.
+  * Возвращен пакет mono-jay.
+  * Обработка профилей nodocs, cert.
 
  -- Лаборатория 50 <team@lab50.net>  Sat, 13 Feb 2021 10:57:40 +0300
 
