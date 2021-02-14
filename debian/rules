@@ -36,9 +36,7 @@ ifeq ($(DEB_HOST_ARCH), armel)
 endif
 
 ifneq (,$(filter $(DEB_HOST_ARCH), arm64 armhf amd64))
-  LLVM_ARCH = true
   CONF_FLAGS += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/ 
-  EXTRA_STRIP := -pmono-llvm-support
 endif
 
 ifeq ($(with_docs),yes)
@@ -122,12 +120,8 @@ override_dh_auto_install:
 override_dh_install:
 	dh_install --list-missing
 
-ifdef LLVM_ARCH
-	dh_install -pmono-runtime /usr/lib/${DEB_HOST_MULTIARCH}/libmono-llvm.a
-endif
-
 override_dh_strip:
-	dh_strip -pmono-runtime $(EXTRA_STRIP) --dbg-package=mono-runtime-dbg
+	dh_strip -pmono-runtime --dbg-package=mono-runtime-dbg
 	dh_strip -a
 	debian/dh_clistrip -i --dbg-package=mono-dbg
 

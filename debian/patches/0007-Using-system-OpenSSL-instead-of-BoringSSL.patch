@@ -39,7 +39,29 @@ Index: mono/configure.ac
  
  if test "x$with_btls_android_api" = "x" ; then
  	case "$BTLS_PLATFORM" in
-@@ -6013,6 +6014,14 @@ fi
+@@ -5884,13 +5885,15 @@ AM_CONDITIONAL(BTLS, test x$enable_btls_
+ 
+ btls_android=no
+ if test "x$enable_btls" = "xyes"; then
+-	AC_PATH_PROG(CMAKE, [cmake], [no], [$PATH:/Applications/CMake.app/Contents/bin:/usr/local/bin])
+-	if test "x$CMAKE" = "xno"; then
+-		AC_MSG_ERROR("cmake not found")
+-	fi
++        if test "x$with_openssl" = "xno"; then
++            AC_PATH_PROG(CMAKE, [cmake], [no], [$PATH:/Applications/CMake.app/Contents/bin:/usr/local/bin])
++            if test "x$CMAKE" = "xno"; then
++                    AC_MSG_ERROR("cmake not found")
++            fi
+ 
+-	BTLS_ROOT=`cd $srcdir && pwd`/external/boringssl
+-	AC_SUBST(BTLS_ROOT)
++            BTLS_ROOT=`cd $srcdir && pwd`/external/boringssl
++            AC_SUBST(BTLS_ROOT)
++        fi
+ 
+ 	btls_arch=
+ 	btls_cflags=
+@@ -6013,6 +6016,14 @@ fi
  
  AM_CONDITIONAL(BTLS_ANDROID, test x$btls_android = xyes)
  
@@ -54,7 +76,7 @@ Index: mono/configure.ac
  ## Maybe should also disable if mcsdir is invalid.  Let's punt the issue for now.
  AM_CONDITIONAL(BUILD_MCS, [test x$cross_compiling = xno && test x$enable_mcs_build != xno])
  AM_CONDITIONAL(BUILD_SUPPORT, [test x$enable_support_build != xno])
-@@ -6979,6 +6988,8 @@ btls_platform_string=
+@@ -6979,6 +6990,8 @@ btls_platform_string=
  if test x$enable_btls = xyes; then
  	if test x$btls_android = xyes; then
  		btls_platform_string=" (android:$BTLS_PLATFORM)"
