@@ -123,7 +123,20 @@ Index: mono/mcs/build/executable.make
 ===================================================================
 --- mono.orig/mcs/build/executable.make
 +++ mono/mcs/build/executable.make
-@@ -49,7 +49,11 @@ ifdef TARGET_NET_REFERENCE
+@@ -31,8 +31,12 @@ ifdef base_prog_config
+ PROGRAM_config := $(build_libdir)$(PROGRAM).config
+ endif
+ 
++ifdef USE_SYSTEM_MONO
++SN = sn -q
++else
+ sn = $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/sn.exe
+ SN = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(sn) -q
++endif
+ 
+ the_lib = $(the_libdir)$(base_prog)
+ build_lib = $(build_libdir)$(base_prog)
+@@ -49,7 +53,11 @@ ifdef TARGET_NET_REFERENCE
  LIB_REFS_MONO = $(call _FILTER_OUT,System,$(call _FILTER_OUT,mscorlib,$(LIB_REFS_ALL)))
  LIB_REFS_SYSTEM = $(filter-out $(LIB_REFS_MONO),$(LIB_REFS_ALL))
  
@@ -165,6 +178,21 @@ Index: mono/mcs/build/library.make
  
  LIB_MCS_FLAGS += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_FULL))
  LIB_MCS_FLAGS += $(patsubst %,-r:%.dll, $(subst =,=$(topdir)/class/lib/$(PROFILE_DIRECTORY)/,$(LIB_REFS_ALIAS)))
+@@ -94,10 +103,14 @@ ifdef NO_SIGN_ASSEMBLY
+ SN = :
+ else
+ ifeq ("$(SN)","")
++ifdef USE_SYSTEM_MONO
++SN = sn -q
++else
+ sn = $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/sn.exe
+ SN = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(sn) -q
+ endif
+ endif
++endif
+ 
+ ifeq ($(BUILD_PLATFORM), win32)
+ GACDIR = `cygpath -w $(mono_libdir)`
 Index: mono/mcs/class/Makefile
 ===================================================================
 --- mono.orig/mcs/class/Makefile
@@ -233,22 +261,6 @@ Index: mono/mcs/tools/Makefile
 +DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry
  
  include ../build/rules.make
- 
-Index: mono/mono/tests/Makefile.am
-===================================================================
---- mono.orig/mono/tests/Makefile.am
-+++ mono/mono/tests/Makefile.am
-@@ -2956,7 +2956,11 @@ generic-delegate2.2.exe: $(srcdir)/gener
- 	$(MCS) -r:generic-delegate2-lib.2.dll -out:$@ $<
- 
- bug-3903.exe: bug-3903.cs
-+if USE_SYSTEM_MONO
-+	$(MCS_NO_LIB)  $(srcdir)/bug-3903.cs -nostdlib -r:$(system_mono_path)/2.0-api/mscorlib.dll -r:$(system_mono_path)/2.0-api/System.Core.dll -out:$@
-+else
- 	$(MCS_NO_LIB)  $(srcdir)/bug-3903.cs -nostdlib -r:$(srcdir)/../../external/binary-reference-assemblies/v2.0/mscorlib.dll -r:$(srcdir)/../../external/binary-reference-assemblies/v2.0/System.Core.dll -out:$@
-+endif
- 
- EXTRA_DIST += appdomain-marshalbyref-assemblyload-MidAssembly.cs appdomain-marshalbyref-assemblyload-LeafAssembly.cs
  
 Index: mono/runtime/Makefile.am
 ===================================================================
@@ -354,3 +366,34 @@ Index: mono/mcs/class/System.Web.WebPages/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.WebPages.dll
+Index: mono/mcs/build/rules.make
+===================================================================
+--- mono.orig/mcs/build/rules.make
++++ mono/mcs/build/rules.make
+@@ -57,9 +57,14 @@ INTERNAL_CSC_LOCATION = $(CSC_LOCATION)
+ # Using CSC_SDK_PATH_DISABLED for sanity check that all references have path specified
+ INTERNAL_CSC = CSC_SDK_PATH_DISABLED= $(RUNTIME) $(RUNTIME_FLAGS) $(CSC_RUNTIME_FLAGS) $(INTERNAL_CSC_LOCATION)
+ 
++ifdef USE_SYSTEM_MONO
++RESGEN = resgen
++ILASM = ilasm
++else
+ RESGEN = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/resgen.exe
+-STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
+ ILASM = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/ilasm.exe
++endif
++STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
+ GENSOURCES = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/gensources.exe
+ 
+ depsdir = $(topdir)/build/deps
+Index: mono/mcs/class/corlib/Makefile
+===================================================================
+--- mono.orig/mcs/class/corlib/Makefile
++++ mono/mcs/class/corlib/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/corlib
+ SUBDIRS =
++include ../../build/config.make
+ include ../../build/rules.make
+ export __SECURITY_BOOTSTRAP_DB=$(topdir)/class/corlib
+ 
