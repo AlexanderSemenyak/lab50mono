@@ -59,7 +59,6 @@ override_dh_auto_configure:
 		--mandir=\$${prefix}/share/man \
 		--infodir=\$${prefix}/share/info --sysconfdir=/etc \
 		--with-ikvm-native=no \
-		--disable-support-build \
 		--disable-quiet-build \
 		--disable-system-aot \
 		--with-csc=roslyn \
@@ -90,7 +89,9 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	dh_auto_install
+ifeq ($(with_devel),yes)
 	$(MAKE) -C mcs/jay install DESTDIR=$(CURDIR)/debian/tmp
+endif
 
 	install -m 644 debian/System.Data.dll.config debian/tmp/usr/lib/mono/gac/System.Data/4.0.*/
 	install -m 644 debian/System.Drawing.dll.config debian/tmp/usr/lib/mono/gac/System.Drawing/4.0.*/
@@ -134,12 +135,12 @@ override_dh_makeshlibs:
 	dh_makeshlibs -a
 	debian/dh_makeclilibs -i -X/*-api/ -X/Facades/ -m 1.0 $(DH_INTERNAL_MONO_PARAM)
 	debian/dh_makeclilibs -p libmono-cairo4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-ifeq ($(with_devel),yes)
 	debian/dh_makeclilibs -p libmono-cecil-private-cil -m $(UPVERSION) -l $(NEXT_UPVERSION) $(DH_INTERNAL_MONO_PARAM)
-endif
 	debian/dh_makeclilibs -p libmono-compilerservices-symbolwriter4.0-cil -m 3.6.0 $(DH_INTERNAL_MONO_PARAM)
 	debian/dh_makeclilibs -p libmono-corlib4.5-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
+ifeq ($(with_devel),yes)
 	debian/dh_makeclilibs -p libmono-csharp4.0c-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
+endif
 	debian/dh_makeclilibs -p libmono-data-tds4.0-cil -m 3.12.0 $(DH_INTERNAL_MONO_PARAM)
 ifeq ($(with_devel),yes)
 	debian/dh_makeclilibs -p libmono-debugger-soft4.0a-cil -m 3.12.0 $(DH_INTERNAL_MONO_PARAM)
@@ -195,7 +196,9 @@ endif
 	debian/dh_makeclilibs -p libmono-security4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
 	debian/dh_makeclilibs -p libmono-sqlite4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
 	debian/dh_makeclilibs -p libmono-windowsbase4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
+ifeq ($(with_devel),yes)
 	debian/dh_makeclilibs -p monodoc-base -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
+endif
 
 override_dh_shlibdeps:
 #	dh_shlibdeps -a

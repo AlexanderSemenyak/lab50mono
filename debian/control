@@ -366,6 +366,7 @@ Description: Mono.Posix library (for CLI 4.0)
  found in glibc or intl.
 
 Package: libmono-codecontracts4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends},
          ${cli:Depends}
@@ -379,6 +380,7 @@ Description: Mono.CodeContracts library (for CLI 4.0)
  This package contains the Mono.CodeContracts library for CLI 4.0.
 
 Package: libmono-compilerservices-symbolwriter4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono.CompilerServices.SymbolWriter library (for CLI 4.0)
@@ -392,6 +394,7 @@ Description: Mono.CompilerServices.SymbolWriter library (for CLI 4.0)
  for CLI 4.0.
 
 Package: libmono-csharp4.0c-cil
+Build-Profiles: <!cert>
 Provides: libmono-csharp4.0-cil, libmono-csharp4.0a-cil, libmono-csharp4.0b-cil
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
@@ -2108,6 +2111,7 @@ Description: Mono Soft Debugger library (for CLI 4.0)
  This package contains the Mono Soft Debugger library for CLI 4.0.
 
 Package: libmono-tasklets4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends},
          mono-runtime (>= ${binary:Version})
@@ -2392,3 +2396,4 @@ Description: port of Jay (Berkley Yacc for Java) to C#
  bytecode (aka assemblies), and a class library.
  .
  This package mono-jay tool, port of Berkey Yacc for Java to C#.
+

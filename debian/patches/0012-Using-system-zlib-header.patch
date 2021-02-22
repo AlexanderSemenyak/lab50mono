@@ -1,0 +1,124 @@
+From: =?utf-8?b?0KjQu9GL0LrQvtCyINCS0LDRgdC40LvQuNC5?= <vash@lab50.net>
+Date: Mon, 22 Feb 2021 17:47:05 +0300
+Subject: Using system zlib header
+
+---
+ support/minizip/ioapi.c | 2 ++
+ support/minizip/ioapi.h | 6 +++++-
+ support/minizip/unzip.c | 7 ++++++-
+ support/minizip/unzip.h | 6 +++++-
+ support/minizip/zip.c   | 7 ++++++-
+ support/minizip/zip.h   | 6 +++++-
+ 6 files changed, 29 insertions(+), 5 deletions(-)
+
+diff --git a/support/minizip/ioapi.c b/support/minizip/ioapi.c
+index 649255c..6487d5c 100644
+--- a/support/minizip/ioapi.c
++++ b/support/minizip/ioapi.c
+@@ -10,6 +10,8 @@
+ 
+ */
+ 
++#include "config.h"
++
+ #if defined(_WIN32) && (!(defined(_CRT_SECURE_NO_WARNINGS)))
+         #define _CRT_SECURE_NO_WARNINGS
+ #endif
+diff --git a/support/minizip/ioapi.h b/support/minizip/ioapi.h
+index c19178f..8bd40a7 100644
+--- a/support/minizip/ioapi.h
++++ b/support/minizip/ioapi.h
+@@ -43,7 +43,11 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+-#include "../mono/zlib/zlib.h"
++#ifdef HAVE_SYS_ZLIB
++ #include <zlib.h>
++#else
++ #include "../mono/zlib/zlib.h"
++#endif
+ 
+ #if defined(USE_FILE32API)
+ #define fopen64 fopen
+diff --git a/support/minizip/unzip.c b/support/minizip/unzip.c
+index f9e9126..023ecd1 100644
+--- a/support/minizip/unzip.c
++++ b/support/minizip/unzip.c
+@@ -64,6 +64,7 @@
+ */
+ 
+ 
++#include "config.h"
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -72,7 +73,11 @@
+         #define NOUNCRYPT
+ #endif
+ 
+-#include "../mono/zlib/zlib.h"
++#ifdef HAVE_SYS_ZLIB
++ #include <zlib.h>
++#else
++ #include "../mono/zlib/zlib.h"
++#endif
+ #include "unzip.h"
+ 
+ #ifdef STDC
+diff --git a/support/minizip/unzip.h b/support/minizip/unzip.h
+index 9c58128..615376f 100644
+--- a/support/minizip/unzip.h
++++ b/support/minizip/unzip.h
+@@ -48,7 +48,11 @@ extern "C" {
+ #endif
+ 
+ #ifndef _ZLIB_H
+-#include "../mono/zlib/zlib.h"
++#ifdef HAVE_SYS_ZLIB
++ #include <zlib.h>
++#else
++ #include "../mono/zlib/zlib.h"
++#endif
+ #endif
+ 
+ #ifndef  _ZLIBIOAPI_H
+diff --git a/support/minizip/zip.c b/support/minizip/zip.c
+index aa7dc97..452ba00 100644
+--- a/support/minizip/zip.c
++++ b/support/minizip/zip.c
+@@ -22,11 +22,16 @@
+ */
+ 
+ 
++#include "config.h"
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <time.h>
+-#include "../mono/zlib/zlib.h"
++#ifdef HAVE_SYS_ZLIB
++ #include <zlib.h>
++#else
++ #include "../mono/zlib/zlib.h"
++#endif
+ #include "zip.h"
+ 
+ #ifdef STDC
+diff --git a/support/minizip/zip.h b/support/minizip/zip.h
+index f705909..dcf69a3 100644
+--- a/support/minizip/zip.h
++++ b/support/minizip/zip.h
+@@ -47,7 +47,11 @@ extern "C" {
+ //#define HAVE_BZIP2
+ 
+ #ifndef _ZLIB_H
+-#include "../mono/zlib/zlib.h"
++#ifdef HAVE_SYS_ZLIB
++ #include <zlib.h>
++#else
++ #include "../mono/zlib/zlib.h"
++#endif
+ #endif
+ 
+ #ifndef _ZLIBIOAPI_H
