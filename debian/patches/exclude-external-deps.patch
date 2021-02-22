@@ -214,32 +214,6 @@ Index: mono/mcs/class/Makefile
  
  # No new makefiles for: System.Messaging, System.Web.Mobile,
  # System.ServiceProcess
-Index: mono/mcs/errors/Makefile
-===================================================================
---- mono.orig/mcs/errors/Makefile
-+++ mono/mcs/errors/Makefile
-@@ -39,6 +39,12 @@ TEST_SUPPORT_FILES = \
- 
- -include $(mcs_topdir)/build/config.make
- 
-+ifdef USE_SYSTEM_MONO
-+systemdll = $(system_mono_path)/2.0-api/System.dll
-+else
-+systemdll = $(topdir)/../external/binary-reference-assemblies/v2.0/System.dll
-+endif
-+
- # mention all targets
- all-local $(STD_TARGETS:=-local):
- 
-@@ -111,7 +117,7 @@ dlls/second/CS1703-lib.dll: dlls/second/
- dlls/second/CS1705-lib.dll: dlls/second/CS1705-lib.cs
- 	$(CSCOMPILE) /r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/mscorlib.dll /target:library /warn:0 /publicsign /keyfile:key.snk /out:$@ $<
- 
--dlls/cs1703-2/System.dll: $(topdir)/../external/binary-reference-assemblies/v2.0/System.dll
-+dlls/cs1703-2/System.dll: $(systemdll)
- 	mkdir -p $(dir $@)
- 	cp $< $@
- 
 Index: mono/mcs/tools/Makefile
 ===================================================================
 --- mono.orig/mcs/tools/Makefile
@@ -506,3 +480,40 @@ Index: mono/mcs/class/System.ComponentModel.Composition.4.5/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.ComponentModel.Composition.dll
+Index: mono/mcs/class/corlib/il/Makefile
+===================================================================
+--- mono.orig/mcs/class/corlib/il/Makefile
++++ mono/mcs/class/corlib/il/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/corlib/il
+ 
++include ../../../build/config.make
+ include ../../../build/rules.make
+ include il.make
+ 
+Index: mono/mcs/build/profiles/build.make
+===================================================================
+--- mono.orig/mcs/build/profiles/build.make
++++ mono/mcs/build/profiles/build.make
+@@ -30,7 +30,11 @@ endif
+ # Special setup for boostrap tools which we want to run with system/monolite core libraries
+ # for all libraries build as part of this profile
+ #
++ifdef USE_SYSTEM_MONO
++ILASM = ilasm
++else
+ ILASM = $(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/ilasm.exe
++endif
+ STRING_REPLACER = $(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/cil-stringreplacer.exe
+ GENSOURCES =$(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/gensources.exe
+ 
+Index: mono/mcs/class/System.Windows.Forms/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Windows.Forms/Makefile
++++ mono/mcs/class/System.Windows.Forms/Makefile
+@@ -1,4 +1,5 @@
+ thisdir = class/System.Windows.Forms
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Windows.Forms.dll
