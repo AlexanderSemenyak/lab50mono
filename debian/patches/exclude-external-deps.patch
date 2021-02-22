@@ -517,3 +517,14 @@ Index: mono/mcs/class/System.Windows.Forms/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Windows.Forms.dll
+Index: mono/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
+===================================================================
+--- mono.orig/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
++++ mono/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Runtime.CompilerServices.Unsafe
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Runtime.CompilerServices.Unsafe.dll
