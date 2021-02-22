@@ -5,6 +5,7 @@ mono (6.12.0.114-0labft7~rc2) UNRELEASED; urgency=medium
   * Возвращен пакет mono-jay.
   * Обработка профилей nodoc, cert.
   * Использование системного заголовочного файла zlib.h.
+  * DH_INTERNAL_MONO_PARAM больше не используется.
 
  -- Лаборатория 50 <team@lab50.net>  Sat, 13 Feb 2021 10:57:40 +0300
 

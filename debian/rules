@@ -8,8 +8,6 @@ NEXT_UPVERSION = $(shell perl -e '$$_=pop; s/(\d+)$$/$$1+1/e; print' $(UPVERSION
 $(info UPVERSION in [${UPVERSION}])
 $(info NEXT_UPVERSION in [${NEXT_UPVERSION}])
 
-DH_INTERNAL_MONO_PARAM = --internal-mono
-
 DEB_BUILD_ARCH ?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
 DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
@@ -133,76 +131,75 @@ override_dh_fixperms:
 
 override_dh_makeshlibs:
 	dh_makeshlibs -a
-	debian/dh_makeclilibs -i -X/*-api/ -X/Facades/ -m 1.0 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-cairo4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-cecil-private-cil -m $(UPVERSION) -l $(NEXT_UPVERSION) $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-compilerservices-symbolwriter4.0-cil -m 3.6.0 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-corlib4.5-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -i -X/Facades/ -m 1.0
+	debian/dh_makeclilibs -p libmono-cairo4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-cecil-private-cil -m $(UPVERSION) -l $(NEXT_UPVERSION)
+	debian/dh_makeclilibs -p libmono-compilerservices-symbolwriter4.0-cil -m 3.6.0
+	debian/dh_makeclilibs -p libmono-corlib4.5-cil -m 4.0.0~alpha1
 ifeq ($(with_devel),yes)
-	debian/dh_makeclilibs -p libmono-csharp4.0c-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p libmono-csharp4.0c-cil -m 4.0.0~alpha1
 endif
-	debian/dh_makeclilibs -p libmono-data-tds4.0-cil -m 3.12.0 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p libmono-data-tds4.0-cil -m 3.12.0
 ifeq ($(with_devel),yes)
-	debian/dh_makeclilibs -p libmono-debugger-soft4.0a-cil -m 3.12.0 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p libmono-debugger-soft4.0a-cil -m 3.12.0
 endif
-	debian/dh_makeclilibs -p libmono-i18n4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-i18n-cjk4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-i18n-mideast4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-i18n-other4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-i18n-rare4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-i18n-west4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-ldap4.0-cil -m 3.2.3 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-oracle4.0-cil -m 3.12.0 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-peapi4.0a-cil -m 3.2.8 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-posix4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-messaging4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-messaging-rabbitmq4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p libmono-i18n4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-i18n-cjk4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-i18n-mideast4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-i18n-other4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-i18n-rare4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-i18n-west4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-ldap4.0-cil -m 3.2.3
+	debian/dh_makeclilibs -p libmono-oracle4.0-cil -m 3.12.0
+	debian/dh_makeclilibs -p libmono-peapi4.0a-cil -m 3.2.8
+	debian/dh_makeclilibs -p libmono-posix4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-messaging4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-messaging-rabbitmq4.0-cil -m 3.0.6
 ifeq ($(with_devel),yes)
-	debian/dh_makeclilibs -p libmono-microsoft-build4.0-cil -m 3.6.0 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-microsoft-build-engine4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-microsoft-build-framework4.0-cil -m 3.6.0 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-microsoft-build-tasks-v4.0-4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-microsoft-build-utilities-v4.0-4.0-cil -m 3.6.0 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p libmono-microsoft-build4.0-cil -m 3.6.0
+	debian/dh_makeclilibs -p libmono-microsoft-build-engine4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-microsoft-build-framework4.0-cil -m 3.6.0
+	debian/dh_makeclilibs -p libmono-microsoft-build-tasks-v4.0-4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-microsoft-build-utilities-v4.0-4.0-cil -m 3.6.0
 endif
-	debian/dh_makeclilibs -p libmono-relaxng4.0-cil -m 2.10.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-componentmodel-composition4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-componentmodel-dataannotations4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-configuration4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-core4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-data4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-data-services4.0-cil -m 3.2.8 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-drawing4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-identitymodel4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-io-compression4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-io-compression-filesystem4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-ldap4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-messaging4.0-cil -m 2.10.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-net-http-webrequest4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-runtime4.0-cil -m 2.10.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-runtime-caching4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-runtime-serialization4.0-cil -m 4.0.0~alpha1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-servicemodel4.0a-cil -m 3.2.3 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-servicemodel-web4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-serviceprocess4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-web4.0-cil -m 2.10.3 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-web-extensions4.0-cil -m 2.10.3 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-web-http-webhost4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-windows4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-windows-forms-datavisualization4.0a-cil -m 3.2.3 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-xml4.0-cil -m 3.12.0 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-xml-linq4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-system-xml-serialization4.0-cil -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-security4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-sqlite4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_makeclilibs -p libmono-windowsbase4.0-cil -m 3.0.6 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p libmono-relaxng4.0-cil -m 2.10.1
+	debian/dh_makeclilibs -p libmono-system4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-componentmodel-composition4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-system-componentmodel-dataannotations4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-configuration4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-core4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-data4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-data-services4.0-cil -m 3.2.8
+	debian/dh_makeclilibs -p libmono-system-drawing4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-system-identitymodel4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-io-compression4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-system-io-compression-filesystem4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-system-ldap4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-messaging4.0-cil -m 2.10.1
+	debian/dh_makeclilibs -p libmono-system-net-http-webrequest4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-system-runtime4.0-cil -m 2.10.1
+	debian/dh_makeclilibs -p libmono-system-runtime-caching4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-runtime-serialization4.0-cil -m 4.0.0~alpha1
+	debian/dh_makeclilibs -p libmono-system-servicemodel4.0a-cil -m 3.2.3
+	debian/dh_makeclilibs -p libmono-system-servicemodel-web4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-system-serviceprocess4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-system-web4.0-cil -m 2.10.3
+	debian/dh_makeclilibs -p libmono-system-web-extensions4.0-cil -m 2.10.3
+	debian/dh_makeclilibs -p libmono-system-web-http-webhost4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-system-windows4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-system-windows-forms-datavisualization4.0a-cil -m 3.2.3
+	debian/dh_makeclilibs -p libmono-system-xml4.0-cil -m 3.12.0
+	debian/dh_makeclilibs -p libmono-system-xml-linq4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-system-xml-serialization4.0-cil -m 3.2.1
+	debian/dh_makeclilibs -p libmono-security4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-sqlite4.0-cil -m 3.0.6
+	debian/dh_makeclilibs -p libmono-windowsbase4.0-cil -m 3.0.6
 ifeq ($(with_devel),yes)
-	debian/dh_makeclilibs -p monodoc-base -m 3.2.1 $(DH_INTERNAL_MONO_PARAM)
+	debian/dh_makeclilibs -p monodoc-base -m 3.2.1
 endif
 
 override_dh_shlibdeps:
 #	dh_shlibdeps -a
 	dh_shlibdeps -a -Xlibmono-profiler-cov
-	debian/dh_clideps -i -l debian/tmp $(DH_INTERNAL_MONO_PARAM)
-	debian/dh_clideps -p mono-4.0-gac -r $(DH_INTERNAL_MONO_PARAM)
-
+	debian/dh_clideps -i -l debian/tmp
+	debian/dh_clideps -p mono-4.0-gac -r
