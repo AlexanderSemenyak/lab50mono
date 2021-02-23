@@ -3,10 +3,10 @@ Date: Sat, 26 Dec 2020 11:13:50 +0300
 Subject: Dropped deprecated xbuild
 
 ---
-Index: mono/runtime/Makefile.am
+Index: mono-6.12.0.114/runtime/Makefile.am
 ===================================================================
---- mono.orig/runtime/Makefile.am
-+++ mono/runtime/Makefile.am
+--- mono-6.12.0.114.orig/runtime/Makefile.am
++++ mono-6.12.0.114/runtime/Makefile.am
 @@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper
  build_profiles = 
  
@@ -16,10 +16,10 @@ Index: mono/runtime/Makefile.am
  net_profile = net_4_x
  endif
  
-Index: mono/mcs/Makefile
+Index: mono-6.12.0.114/mcs/Makefile
 ===================================================================
---- mono.orig/mcs/Makefile
-+++ mono/mcs/Makefile
+--- mono-6.12.0.114.orig/mcs/Makefile
++++ mono-6.12.0.114/mcs/Makefile
 @@ -44,7 +44,7 @@ dir-check:
  
  # fun specialty targets
@@ -29,10 +29,10 @@ Index: mono/mcs/Makefile
  
  .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
  all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%
-Index: mono/mcs/tools/xbuild/Makefile
+Index: mono-6.12.0.114/mcs/tools/xbuild/Makefile
 ===================================================================
---- mono.orig/mcs/tools/xbuild/Makefile
-+++ mono/mcs/tools/xbuild/Makefile
+--- mono-6.12.0.114.orig/mcs/tools/xbuild/Makefile
++++ mono-6.12.0.114/mcs/tools/xbuild/Makefile
 @@ -3,17 +3,14 @@ SUBDIRS =
  include ../../build/rules.make
  NO_TESTS = yes
@@ -73,3 +73,15 @@ Index: mono/mcs/tools/xbuild/Makefile
 +
 +.PHONY: install-global-files install-web-targets install-pcl-targets install-pcl5-framework install-nuget-targets install-msbuild-specific-files install-versioned-files install-nuget-imports install-extras
 +
+Index: mono-6.12.0.114/mono/tests/Makefile.am
+===================================================================
+--- mono-6.12.0.114.orig/mono/tests/Makefile.am
++++ mono-6.12.0.114/mono/tests/Makefile.am
+@@ -279,7 +279,6 @@ TESTS_CS_SRC=		\
+ 	array-12193.cs		\
+ 	array-init.cs		\
+ 	arraylist.cs		\
+-	assembly-load-remap.cs	\
+ 	assembly-load-bytes.cs	\
+ 	assembly-loadfile.cs	\
+ 	assembly-loadfrom.cs	\

@@ -7,11 +7,11 @@ Subject: fix-tests
  mono/unit-tests/Makefile.am | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/mono/unit-tests/Makefile.am b/mono/unit-tests/Makefile.am
-index 85fff69..a21af8b 100644
---- a/mono/unit-tests/Makefile.am
-+++ b/mono/unit-tests/Makefile.am
-@@ -95,18 +95,18 @@ test_mono_handle_LDFLAGS = $(test_ldflags)
+Index: mono-6.12.0.114/mono/unit-tests/Makefile.am
+===================================================================
+--- mono-6.12.0.114.orig/mono/unit-tests/Makefile.am
++++ mono-6.12.0.114/mono/unit-tests/Makefile.am
+@@ -95,18 +95,18 @@ test_mono_handle_LDFLAGS = $(test_ldflag
  
  test_mono_callspec_SOURCES = main.c
  test_mono_callspec_CFLAGS = $(AM_CFLAGS) -DMAIN=test_mono_callspec_main
@@ -42,3 +42,54 @@ index 85fff69..a21af8b 100644
  test_embed_invoke_LDFLAGS = $(test_ldflags)
  test_embed_invoke_DEPENDENCIES = test-embed-invoke-cs.exe
  
+Index: mono-6.12.0.114/mono/tests/Makefile.am
+===================================================================
+--- mono-6.12.0.114.orig/mono/tests/Makefile.am
++++ mono-6.12.0.114/mono/tests/Makefile.am
+@@ -2955,8 +2955,13 @@ generic-delegate2.2.exe$(PLATFORM_AOT_SU
+ generic-delegate2.2.exe: $(srcdir)/generic-delegate2.2.cs generic-delegate2-lib.2.dll
+ 	$(MCS) -r:generic-delegate2-lib.2.dll -out:$@ $<
+ 
++if USE_SYSTEM_MONO
++bug-3903.exe: bug-3903.cs
++	$(MCS_NO_LIB)  $(srcdir)/bug-3903.cs -nostdlib -r:$(system_mono_path)/2.0-api/mscorlib.dll -r:$(system_mono_path)/2.0-api/System.Core.dll -out:$@
++else
+ bug-3903.exe: bug-3903.cs
+ 	$(MCS_NO_LIB)  $(srcdir)/bug-3903.cs -nostdlib -r:$(srcdir)/../../external/binary-reference-assemblies/v2.0/mscorlib.dll -r:$(srcdir)/../../external/binary-reference-assemblies/v2.0/System.Core.dll -out:$@
++endif
+ 
+ EXTRA_DIST += appdomain-marshalbyref-assemblyload-MidAssembly.cs appdomain-marshalbyref-assemblyload-LeafAssembly.cs
+ 
+Index: mono-6.12.0.114/mcs/errors/Makefile
+===================================================================
+--- mono-6.12.0.114.orig/mcs/errors/Makefile
++++ mono-6.12.0.114/mcs/errors/Makefile
+@@ -45,7 +45,11 @@ all-local $(STD_TARGETS:=-local):
+ VALID_TEST_PROFILE := $(filter net_4_x, $(PROFILE))
+ ifdef VALID_TEST_PROFILE
+ 
+-qcheck: run-mcs-tests 
++ifdef USE_SYSTEM_MONO
++qcheck:
++else
++qcheck: run-mcs-tests
++endif
+ 
+ run-test-local: test-local qcheck
+ 
+@@ -111,9 +115,15 @@ dlls/second/CS1703-lib.dll: dlls/second/
+ dlls/second/CS1705-lib.dll: dlls/second/CS1705-lib.cs
+ 	$(CSCOMPILE) /r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/mscorlib.dll /target:library /warn:0 /publicsign /keyfile:key.snk /out:$@ $<
+ 
++ifdef USE_SYSTEM_MONO
++dlls/cs1703-2/System.dll: $(system_mono_path)/2.0-api/System.dll
++	mkdir -p $(dir $@)
++	cp $< $@
++else
+ dlls/cs1703-2/System.dll: $(topdir)/../external/binary-reference-assemblies/v2.0/System.dll
+ 	mkdir -p $(dir $@)
+ 	cp $< $@
++endif
+ 
+ CS1701-lib.dll : CS1701-lib.cs dlls/first/CS1701-lib.dll
+ 	$(CSCOMPILE) /r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/mscorlib.dll /target:library /warn:0 /r:dlls/first/CS1701-lib.dll /out:$@ $<
