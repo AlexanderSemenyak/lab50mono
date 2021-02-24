@@ -1,4 +1,4 @@
-libmono-btls-shared 0 mono-runtime-common
-libmono-native 0 mono-runtime-common
-libMonoPosixHelper 0 mono-runtime-common
-libMonoSupportW 0 mono-runtime-common
+libmono-btls-shared 0 mono-runtime
+libmono-native 0 mono-runtime
+libMonoPosixHelper 0 mono-runtime
+libMonoSupportW 0 mono-runtime
