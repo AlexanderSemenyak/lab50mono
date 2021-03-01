@@ -150,7 +150,7 @@ Index: mono/mono/btls/btls-bio.c
 ===================================================================
 --- mono.orig/mono/btls/btls-bio.c
 +++ mono/mono/btls/btls-bio.c
-@@ -10,6 +10,11 @@
+@@ -10,9 +10,17 @@
  #include "btls-bio.h"
  #include "../utils/mono-errno.h"
  #include <errno.h>
@@ -162,7 +162,13 @@ Index: mono/mono/btls/btls-bio.c
  
  struct MonoBtlsBio {
  	const void *instance;
-@@ -32,7 +37,7 @@ mono_debug (const char *message)
++#ifdef WITH_OPENSSL
++	BIO_METHOD *meth;
++#endif
+ 	MonoBtlsReadFunc read_func;
+ 	MonoBtlsWriteFunc write_func;
+ 	MonoBtlsControlFunc control_func;
+@@ -32,7 +40,7 @@ mono_debug (const char *message)
  static int
  mono_read (BIO *bio, char *out, int outl)
  {
@@ -171,7 +177,7 @@ Index: mono/mono/btls/btls-bio.c
  	int ret, wantMore;
  
  	if (!mono)
-@@ -59,7 +64,7 @@ mono_read (BIO *bio, char *out, int outl
+@@ -59,7 +67,7 @@ mono_read (BIO *bio, char *out, int outl
  static int
  mono_write (BIO *bio, const char *in, int inl)
  {
@@ -180,7 +186,7 @@ Index: mono/mono/btls/btls-bio.c
  
  	if (!mono)
  		return -1;
-@@ -70,7 +75,7 @@ mono_write (BIO *bio, const char *in, in
+@@ -70,12 +78,12 @@ mono_write (BIO *bio, const char *in, in
  static long
  mono_ctrl (BIO *bio, int cmd, long num, void *ptr)
  {
@@ -189,34 +195,44 @@ Index: mono/mono/btls/btls-bio.c
  
  	if (!mono)
  		return -1;
-@@ -89,9 +94,9 @@ static int
+ 
+-	// fprintf (stderr, "mono_ctrl: %x - %lx - %p\n", cmd, num, ptr);
++	fprintf (stderr, "mono_ctrl: %x - %lx - %p\n", cmd, num, ptr);
+ 	switch (cmd) {
+ 		case BIO_CTRL_FLUSH:
+ 			return (long)mono->control_func (mono->instance, MONO_BTLS_CONTROL_COMMAND_FLUSH, 0);
+@@ -88,21 +96,22 @@ mono_ctrl (BIO *bio, int cmd, long num,
+ static int
  mono_new (BIO *bio)
  {
- 	// mono_debug("mono_new!\n");
+-	// mono_debug("mono_new!\n");
 -	bio->init = 0;
 -	bio->num = -1;
 -	bio->flags = 0;
++	//mono_debug("mono_new\n");
 +	BIO_set_init(bio, 0);
 +	//bio->num = -1;
 +	BIO_clear_flags(bio, INT_MAX);
  	return 1;
  }
  
-@@ -99,10 +104,10 @@ static int
+ static int
  mono_free (BIO *bio)
  {
- 	// mono_debug ("mono_free!\n");
+-	// mono_debug ("mono_free!\n");
 -	if (bio->ptr) {
 -		MonoBtlsBio *mono = (MonoBtlsBio *)bio->ptr;
++	//mono_debug ("mono_free\n");
 +	if (BIO_get_data(bio)) {
 +		MonoBtlsBio *mono = (MonoBtlsBio *)BIO_get_data(bio);
  
 -		bio->ptr = NULL;
 +		BIO_set_data(bio, NULL);
++                BIO_meth_free(mono->meth);
  		mono->instance = NULL;
  		mono->read_func = NULL;
  		mono->write_func = NULL;
-@@ -112,31 +117,50 @@ mono_free (BIO *bio)
+@@ -112,10 +121,12 @@ mono_free (BIO *bio)
  	return 1;
  }
  
@@ -229,21 +245,19 @@ Index: mono/mono/btls/btls-bio.c
  
  BIO *
  mono_btls_bio_mono_new (void)
- {
-+#ifdef WITH_OPENSSL
-+	BIO_METHOD *bio;
-+#else
+@@ -123,20 +134,37 @@ mono_btls_bio_mono_new (void)
  	BIO *bio;
-+#endif
  	MonoBtlsBio *monoBio;
  
 +#ifdef WITH_OPENSSL
-+	bio = BIO_meth_new(BIO_TYPE_NONE, "mono");
-+	BIO_meth_set_read(bio, mono_read);
-+	BIO_meth_set_ctrl(bio, mono_ctrl);
-+	BIO_meth_set_write(bio, mono_write);
-+	BIO_meth_set_create(bio, mono_new);
-+	BIO_meth_set_destroy(bio, mono_free);
++	BIO_METHOD *bio_meth;
++	bio_meth = BIO_meth_new(BIO_TYPE_NONE, "mono");
++	BIO_meth_set_read(bio_meth, mono_read);
++	BIO_meth_set_ctrl(bio_meth, mono_ctrl);
++	BIO_meth_set_write(bio_meth, mono_write);
++	BIO_meth_set_create(bio_meth, mono_new);
++	BIO_meth_set_destroy(bio_meth, mono_free);
++        bio = BIO_new (bio_meth);
 +#else /* WITH_OPENSSL */
  	bio = BIO_new (&mono_method);
 +#endif
@@ -253,12 +267,14 @@ Index: mono/mono/btls/btls-bio.c
  	monoBio = calloc (1, sizeof (MonoBtlsBio));
  	if (!monoBio) {
 +#ifdef WITH_OPENSSL
-+		BIO_meth_free (bio);
-+#else
- 		BIO_free (bio);
++		BIO_meth_free (bio_meth);
 +#endif
+ 		BIO_free (bio);
  		return NULL;
  	}
++#ifdef WITH_OPENSSL
++        monoBio->meth = bio_meth;
++#endif
  
 -	bio->ptr = monoBio;
 -	bio->init = 0;
@@ -270,7 +286,7 @@ Index: mono/mono/btls/btls-bio.c
  }
  
  void
-@@ -144,14 +168,14 @@ mono_btls_bio_mono_initialize (BIO *bio,
+@@ -144,14 +172,14 @@ mono_btls_bio_mono_initialize (BIO *bio,
  			      MonoBtlsReadFunc read_func, MonoBtlsWriteFunc write_func,
  			      MonoBtlsControlFunc control_func)
  {
@@ -287,7 +303,7 @@ Index: mono/mono/btls/btls-bio.c
  }
  
  int
-@@ -187,13 +211,17 @@ mono_btls_bio_hexdump (BIO *bio, const u
+@@ -187,7 +215,7 @@ mono_btls_bio_hexdump (BIO *bio, const u
  void
  mono_btls_bio_print_errors (BIO *bio)
  {
@@ -296,16 +312,6 @@ Index: mono/mono/btls/btls-bio.c
  }
  
  void
- mono_btls_bio_free (BIO *bio)
- {
-+#ifdef WITH_OPENSSL
-+	BIO_meth_free ((BIO_METHOD*)bio);
-+#else
- 	BIO_free (bio);
-+#endif
- }
- 
- BIO *
 Index: mono/mono/btls/btls-error.c
 ===================================================================
 --- mono.orig/mono/btls/btls-error.c
@@ -661,7 +667,7 @@ Index: mono/mono/btls/btls-ssl.c
  	ptr->ssl = SSL_new (mono_btls_ssl_ctx_get_ctx (ptr->ctx));
 +#if defined(WITH_OPENSSL)
 +	// Renegotiation is an extremely problematic protocol
-+        // feature, so BoringSSL rejects peer renegotiations by default.
++    // feature, so BoringSSL rejects peer renegotiations by default.
 +	SSL_set_options(ptr->ssl, NO_RENEGOTIATION);
 +#endif
  
