@@ -6,11 +6,11 @@ Subject: Add System.Runtime.CompilerServices.Unsafe public in mscorlib
  mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs b/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs
-index 318bf29..1c68120 100644
---- a/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs
-+++ b/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs
-@@ -36,7 +36,7 @@
+Index: mono/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs
+===================================================================
+--- mono.orig/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs
++++ mono/mcs/class/corlib/System.Runtime.CompilerServices/Unsafe.cs
+@@ -36,7 +36,7 @@ using nint = System.Int32;
  
  namespace System.Runtime.CompilerServices
  {
@@ -19,3 +19,15 @@ index 318bf29..1c68120 100644
  	{
  		public static ref T Add<T> (ref T source, int elementOffset)
  		{
+Index: mono/mcs/class/Makefile
+===================================================================
+--- mono.orig/mcs/class/Makefile
++++ mono/mcs/class/Makefile
+@@ -384,7 +384,6 @@ net_4_x_parallel_dirs = \
+ 	System.Reflection.Context \
+ 	Mono.Profiler.Log	\
+ 	Mono.Runtime.Tests	\
+-	System.Runtime.CompilerServices.Unsafe \
+ 	SystemWebTestShim \
+ 	$(xbuild_4_0_dirs)
+ 
