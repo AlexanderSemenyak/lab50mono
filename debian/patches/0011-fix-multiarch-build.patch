@@ -1,7 +1,17 @@
-Index: mono/data/config.in
+From: =?utf-8?b?0JvQsNCx0L7RgNCw0YLQvtGA0LjRjyA1MA==?= <team@lab50.net>
+Date: Thu, 4 Mar 2021 12:17:18 +0300
+Subject: fix-multiarch-build
+
 ===================================================================
---- mono.orig/data/config.in
-+++ mono/data/config.in
+---
+ data/config.in      | 10 +++++-----
+ runtime/Makefile.am | 14 ++++++++++++--
+ 2 files changed, 17 insertions(+), 7 deletions(-)
+
+diff --git a/data/config.in b/data/config.in
+index 5758a17..9386cbf 100644
+--- a/data/config.in
++++ b/data/config.in
 @@ -10,11 +10,11 @@
  	<dllmap dll="i:odbc32.dll" target="libiodbc.dylib" os="osx"/>
  	<dllmap dll="oci" target="libclntsh@libsuffix@" os="!windows"/>
@@ -19,10 +29,10 @@ Index: mono/data/config.in
  	<dllmap dll="i:msvcrt" target="@LIBC@" os="!windows"/>
  	<dllmap dll="i:msvcrt.dll" target="@LIBC@" os="!windows"/>
  	<dllmap dll="sqlite" target="@SQLITE@" os="!windows"/>
-Index: mono/runtime/Makefile.am
-===================================================================
---- mono.orig/runtime/Makefile.am
-+++ mono/runtime/Makefile.am
+diff --git a/runtime/Makefile.am b/runtime/Makefile.am
+index 9837811..b38a74f 100644
+--- a/runtime/Makefile.am
++++ b/runtime/Makefile.am
 @@ -253,19 +253,28 @@ CLEANFILES = etc/mono/config
  etc/mono/config: ../data/config Makefile $(symlinks)
  	cp $< $@
@@ -54,7 +64,7 @@ Index: mono/runtime/Makefile.am
  	if test -d "$(abs_top_builddir)/mono/btls/build-shared"; then \
  		sed 's,target="$$mono_libdir/libmono-btls-shared$(libsuffix)",target="$(abs_top_builddir)/mono/btls/build-shared/libmono-btls-shared$(libsuffix)",' $@ > $@.tmp \
  		 && mv $@.tmp $@ \
-@@ -273,6 +282,7 @@ etc/mono/config: ../data/config Makefile
+@@ -273,6 +282,7 @@ etc/mono/config: ../data/config Makefile $(symlinks)
  	else \
  		echo "Unknown directory '$(abs_top_builddir)/mono/btls/build-shared'"; \
  	fi

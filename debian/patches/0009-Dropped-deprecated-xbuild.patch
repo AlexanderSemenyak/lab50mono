@@ -3,23 +3,16 @@ Date: Sat, 26 Dec 2020 11:13:50 +0300
 Subject: Dropped deprecated xbuild
 
 ---
-Index: mono-6.12.0.114/runtime/Makefile.am
-===================================================================
---- mono-6.12.0.114.orig/runtime/Makefile.am
-+++ mono-6.12.0.114/runtime/Makefile.am
-@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper
- build_profiles = 
- 
- if INSTALL_4_x
--build_profiles += net_4_x xbuild_12 xbuild_14
-+build_profiles += net_4_x
- net_profile = net_4_x
- endif
- 
-Index: mono-6.12.0.114/mcs/Makefile
-===================================================================
---- mono-6.12.0.114.orig/mcs/Makefile
-+++ mono-6.12.0.114/mcs/Makefile
+ mcs/Makefile              |  2 +-
+ mcs/tools/xbuild/Makefile | 14 +++++++-------
+ mono/tests/Makefile.am    |  1 -
+ runtime/Makefile.am       |  2 +-
+ 4 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/mcs/Makefile b/mcs/Makefile
+index 50c90b7..60c18cd 100644
+--- a/mcs/Makefile
++++ b/mcs/Makefile
 @@ -44,7 +44,7 @@ dir-check:
  
  # fun specialty targets
@@ -29,10 +22,10 @@ Index: mono-6.12.0.114/mcs/Makefile
  
  .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
  all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%
-Index: mono-6.12.0.114/mcs/tools/xbuild/Makefile
-===================================================================
---- mono-6.12.0.114.orig/mcs/tools/xbuild/Makefile
-+++ mono-6.12.0.114/mcs/tools/xbuild/Makefile
+diff --git a/mcs/tools/xbuild/Makefile b/mcs/tools/xbuild/Makefile
+index 5b3c6a9..497ccac 100644
+--- a/mcs/tools/xbuild/Makefile
++++ b/mcs/tools/xbuild/Makefile
 @@ -3,17 +3,14 @@ SUBDIRS =
  include ../../build/rules.make
  NO_TESTS = yes
@@ -73,10 +66,10 @@ Index: mono-6.12.0.114/mcs/tools/xbuild/Makefile
 +
 +.PHONY: install-global-files install-web-targets install-pcl-targets install-pcl5-framework install-nuget-targets install-msbuild-specific-files install-versioned-files install-nuget-imports install-extras
 +
-Index: mono-6.12.0.114/mono/tests/Makefile.am
-===================================================================
---- mono-6.12.0.114.orig/mono/tests/Makefile.am
-+++ mono-6.12.0.114/mono/tests/Makefile.am
+diff --git a/mono/tests/Makefile.am b/mono/tests/Makefile.am
+index c12097b..f54a124 100755
+--- a/mono/tests/Makefile.am
++++ b/mono/tests/Makefile.am
 @@ -279,7 +279,6 @@ TESTS_CS_SRC=		\
  	array-12193.cs		\
  	array-init.cs		\
@@ -85,3 +78,16 @@ Index: mono-6.12.0.114/mono/tests/Makefile.am
  	assembly-load-bytes.cs	\
  	assembly-loadfile.cs	\
  	assembly-loadfrom.cs	\
+diff --git a/runtime/Makefile.am b/runtime/Makefile.am
+index b0bf0e7..9837811 100644
+--- a/runtime/Makefile.am
++++ b/runtime/Makefile.am
+@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper etc/mono/config
+ build_profiles = 
+ 
+ if INSTALL_4_x
+-build_profiles += net_4_x xbuild_12 xbuild_14
++build_profiles += net_4_x
+ net_profile = net_4_x
+ endif
+ 

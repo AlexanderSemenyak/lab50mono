@@ -4,21 +4,41 @@ Subject: exclude-external-deps
 
 ===================================================================
 ---
- configure.ac              | 33 ++++++++++++++++++++++++++-------
- mcs/Makefile              |  6 +++---
- mcs/build/executable.make |  4 ++++
- mcs/build/library.make    |  9 +++++++++
- mcs/class/Makefile        |  3 +--
- mcs/errors/Makefile       |  8 +++++++-
- mcs/tools/Makefile        |  4 ++--
- mono/tests/Makefile.am    |  4 ++++
- runtime/Makefile.am       |  2 +-
- 9 files changed, 57 insertions(+), 16 deletions(-)
+ configure.ac                                       | 35 +++++++++++++++++-----
+ m4/mono-output.m4                                  |  1 -
+ mcs/Makefile                                       |  6 ++--
+ mcs/build/executable.make                          |  8 +++++
+ mcs/build/library.make                             | 13 ++++++++
+ mcs/build/profiles/build.make                      |  4 +++
+ mcs/build/rules.make                               |  7 ++++-
+ mcs/class/Makefile                                 |  3 +-
+ mcs/class/Mono.Directory.LDAP/Makefile             |  1 +
+ mcs/class/Novell.Directory.Ldap/Makefile           |  1 +
+ .../System.ComponentModel.Composition.4.5/Makefile |  1 +
+ mcs/class/System.Data.Services.Client/Makefile     |  1 +
+ mcs/class/System.Json.Microsoft/Makefile           |  1 +
+ mcs/class/System.Net.Http.Formatting/Makefile      |  3 +-
+ .../Makefile                                       |  1 +
+ mcs/class/System.Web.Http.SelfHost/Makefile        |  3 +-
+ mcs/class/System.Web.Http.WebHost/Makefile         |  1 +
+ mcs/class/System.Web.Http/Makefile                 |  1 +
+ mcs/class/System.Web.Mvc3/Makefile                 |  1 +
+ mcs/class/System.Web.Razor/Makefile                |  1 +
+ mcs/class/System.Web.WebPages.Deployment/Makefile  |  1 +
+ mcs/class/System.Web.WebPages.Razor/Makefile       |  1 +
+ mcs/class/System.Web.WebPages/Makefile             |  1 +
+ mcs/class/System.Web/Makefile                      |  8 ++++-
+ mcs/class/System.Windows.Forms/Makefile            |  1 +
+ mcs/class/corlib/Makefile                          |  1 +
+ mcs/class/corlib/il/Makefile                       |  1 +
+ mcs/tools/Makefile                                 |  4 +--
+ runtime/Makefile.am                                |  2 +-
+ 29 files changed, 92 insertions(+), 21 deletions(-)
 
-Index: mono/configure.ac
-===================================================================
---- mono.orig/configure.ac
-+++ mono/configure.ac
+diff --git a/configure.ac b/configure.ac
+index 4d32c90..5635494 100644
+--- a/configure.ac
++++ b/configure.ac
 @@ -915,6 +915,17 @@ CFLAGS="$WARN $CFLAGS -g"
  CFLAGS_FOR_LIBGC="$CFLAGS_FOR_LIBGC -g"
  CPPFLAGS="$WARN $CPPFLAGS -g"
@@ -89,10 +109,22 @@ Index: mono/configure.ac
      echo "RUNTIME = $mono_build_root/runtime/mono-wrapper" >> $mcs_topdir/build/config.make
      echo "JAY_CFLAGS = $JAY_CFLAGS" >> $mcs_topdir/build/config.make
      echo "VERSION = $VERSION" >> $mcs_topdir/build/config.make
-Index: mono/mcs/Makefile
-===================================================================
---- mono.orig/mcs/Makefile
-+++ mono/mcs/Makefile
+diff --git a/m4/mono-output.m4 b/m4/mono-output.m4
+index c328bac..448b3c8 100644
+--- a/m4/mono-output.m4
++++ b/m4/mono-output.m4
+@@ -51,7 +51,6 @@ AC_DEFUN([AC_MONO_OUTPUT], [
+ 		mono/eglib/eglib-config.h
+ 		mono/eglib/test/Makefile
+ 		m4/Makefile
+-		msvc/Makefile
+ 		mono/utils/jemalloc/Makefile
+ 		mono-uninstalled.pc
+ 		acceptance-tests/Makefile
+diff --git a/mcs/Makefile b/mcs/Makefile
+index 42c4496..0964453 100644
+--- a/mcs/Makefile
++++ b/mcs/Makefile
 @@ -1,6 +1,6 @@
  thisdir := .
  
@@ -101,7 +133,7 @@ Index: mono/mcs/Makefile
  
  # Resgen is corlib specific tool
  
-@@ -19,7 +19,7 @@ testing_aot_full_interp_SUBDIRS := build
+@@ -19,7 +19,7 @@ testing_aot_full_interp_SUBDIRS := build class
  testing_aot_hybrid_SUBDIRS := build class
  testing_aot_full_SUBDIRS := build class
  binary_reference_assemblies_SUBDIRS := build class
@@ -119,10 +151,10 @@ Index: mono/mcs/Makefile
  
  .PHONY: all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles)
  all-profiles compiler-test-profiles run-compiler-test-profiles $(STD_TARGETS:=-profiles): %-profiles: profiles-do--%
-Index: mono/mcs/build/executable.make
-===================================================================
---- mono.orig/mcs/build/executable.make
-+++ mono/mcs/build/executable.make
+diff --git a/mcs/build/executable.make b/mcs/build/executable.make
+index 29abac5..44a246f 100644
+--- a/mcs/build/executable.make
++++ b/mcs/build/executable.make
 @@ -31,8 +31,12 @@ ifdef base_prog_config
  PROGRAM_config := $(build_libdir)$(PROGRAM).config
  endif
@@ -148,11 +180,11 @@ Index: mono/mcs/build/executable.make
  MCS_REFERENCES += $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_MONO))
  else
  MCS_REFERENCES = $(patsubst %,-r:$(topdir)/class/lib/$(PROFILE_DIRECTORY)/%.dll,$(LIB_REFS_ALL))
-Index: mono/mcs/build/library.make
-===================================================================
---- mono.orig/mcs/build/library.make
-+++ mono/mcs/build/library.make
-@@ -28,16 +28,25 @@ LIB_REFS_MONO_ALIAS = $(call _FILTER_OUT
+diff --git a/mcs/build/library.make b/mcs/build/library.make
+index ca9b193..fb18aed 100644
+--- a/mcs/build/library.make
++++ b/mcs/build/library.make
+@@ -28,16 +28,25 @@ LIB_REFS_MONO_ALIAS = $(call _FILTER_OUT,System,$(LIB_REFS_ALIAS))
  LIB_REFS_NET_FULL = $(filter-out $(LIB_REFS_MONO_FULL),$(LIB_REFS_FULL))
  LIB_REFS_NET_ALIAS = $(filter-out $(LIB_REFS_MONO_ALIAS),$(LIB_REFS_ALIAS))
  
@@ -193,10 +225,46 @@ Index: mono/mcs/build/library.make
  
  ifeq ($(BUILD_PLATFORM), win32)
  GACDIR = `cygpath -w $(mono_libdir)`
-Index: mono/mcs/class/Makefile
-===================================================================
---- mono.orig/mcs/class/Makefile
-+++ mono/mcs/class/Makefile
+diff --git a/mcs/build/profiles/build.make b/mcs/build/profiles/build.make
+index b1c9a41..d8f9836 100644
+--- a/mcs/build/profiles/build.make
++++ b/mcs/build/profiles/build.make
+@@ -30,7 +30,11 @@ endif
+ # Special setup for boostrap tools which we want to run with system/monolite core libraries
+ # for all libraries build as part of this profile
+ #
++ifdef USE_SYSTEM_MONO
++ILASM = ilasm
++else
+ ILASM = $(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/ilasm.exe
++endif
+ STRING_REPLACER = $(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/cil-stringreplacer.exe
+ GENSOURCES =$(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/gensources.exe
+ 
+diff --git a/mcs/build/rules.make b/mcs/build/rules.make
+index e57a636..57bf278 100644
+--- a/mcs/build/rules.make
++++ b/mcs/build/rules.make
+@@ -57,9 +57,14 @@ INTERNAL_CSC_LOCATION = $(CSC_LOCATION)
+ # Using CSC_SDK_PATH_DISABLED for sanity check that all references have path specified
+ INTERNAL_CSC = CSC_SDK_PATH_DISABLED= $(RUNTIME) $(RUNTIME_FLAGS) $(CSC_RUNTIME_FLAGS) $(INTERNAL_CSC_LOCATION)
+ 
++ifdef USE_SYSTEM_MONO
++RESGEN = resgen
++ILASM = ilasm
++else
+ RESGEN = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/resgen.exe
+-STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
+ ILASM = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/ilasm.exe
++endif
++STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
+ GENSOURCES = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/gensources.exe
+ 
+ depsdir = $(topdir)/build/deps
+diff --git a/mcs/class/Makefile b/mcs/class/Makefile
+index 1ab7f8b..41fea7f 100644
+--- a/mcs/class/Makefile
++++ b/mcs/class/Makefile
 @@ -385,7 +385,6 @@ net_4_x_parallel_dirs = \
  	Mono.Profiler.Log	\
  	Mono.Runtime.Tests	\
@@ -214,57 +282,65 @@ Index: mono/mcs/class/Makefile
  
  # No new makefiles for: System.Messaging, System.Web.Mobile,
  # System.ServiceProcess
-Index: mono/mcs/tools/Makefile
-===================================================================
---- mono.orig/mcs/tools/Makefile
-+++ mono/mcs/tools/Makefile
-@@ -52,7 +52,7 @@ net_4_5_dirs := \
- 	gacutil
+diff --git a/mcs/class/Mono.Directory.LDAP/Makefile b/mcs/class/Mono.Directory.LDAP/Makefile
+index 040a180..f4e090a 100644
+--- a/mcs/class/Mono.Directory.LDAP/Makefile
++++ b/mcs/class/Mono.Directory.LDAP/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/Mono.Directory.LDAP
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
  
- build_SUBDIRS =
--build_PARALLEL_SUBDIRS := resgen gacutil security culevel upload-to-sentry mono-helix-client commoncryptogenerator resx2sr linker cil-strip corcompare mono-api-diff mono-api-html
-+build_PARALLEL_SUBDIRS := resgen gacutil security culevel upload-to-sentry commoncryptogenerator resx2sr linker cil-strip corcompare mono-api-diff mono-api-html
- monodroid_tools_SUBDIRS =
- monodroid_tools_PARALLEL_SUBDIRS = aprofutil cil-strip linker-analyzer mkbundle mdoc mono-symbolicate corcompare mono-api-diff mono-api-html pdb2mdb nunit-lite
- monodroid_SUBDIRS = nunit-lite
-@@ -68,7 +68,7 @@ net_4_x_PARALLEL_SUBDIRS = $(net_4_5_dir
- wasm_tools_SUBDIRS =
- wasm_tools_PARALLEL_SUBDIRS = linker wasm-tuner cil-strip
+ LIBRARY = Mono.Directory.LDAP.dll
+diff --git a/mcs/class/Novell.Directory.Ldap/Makefile b/mcs/class/Novell.Directory.Ldap/Makefile
+index e7ffb40..9c63602 100644
+--- a/mcs/class/Novell.Directory.Ldap/Makefile
++++ b/mcs/class/Novell.Directory.Ldap/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/Novell.Directory.Ldap
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
  
--DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry mono-helix-client
-+DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry
+ LIBRARY = Novell.Directory.Ldap.dll
+diff --git a/mcs/class/System.ComponentModel.Composition.4.5/Makefile b/mcs/class/System.ComponentModel.Composition.4.5/Makefile
+index 2b9e35c..1e6e857 100644
+--- a/mcs/class/System.ComponentModel.Composition.4.5/Makefile
++++ b/mcs/class/System.ComponentModel.Composition.4.5/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.ComponentModel.Composition.4.5
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
  
- include ../build/rules.make
+ LIBRARY = System.ComponentModel.Composition.dll
+diff --git a/mcs/class/System.Data.Services.Client/Makefile b/mcs/class/System.Data.Services.Client/Makefile
+index 73c724a..c5e3883 100644
+--- a/mcs/class/System.Data.Services.Client/Makefile
++++ b/mcs/class/System.Data.Services.Client/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Data.Services.Client
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
  
-Index: mono/runtime/Makefile.am
-===================================================================
---- mono.orig/runtime/Makefile.am
-+++ mono/runtime/Makefile.am
-@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper
- build_profiles = 
+ LIBRARY = System.Data.Services.Client.dll
+diff --git a/mcs/class/System.Json.Microsoft/Makefile b/mcs/class/System.Json.Microsoft/Makefile
+index 8938fa7..755d182 100644
+--- a/mcs/class/System.Json.Microsoft/Makefile
++++ b/mcs/class/System.Json.Microsoft/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Json.Microsoft
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
  
- if INSTALL_4_x
--build_profiles += binary_reference_assemblies net_4_x xbuild_12 xbuild_14
-+build_profiles += net_4_x xbuild_12 xbuild_14
- net_profile = net_4_x
- endif
- 
-Index: mono/m4/mono-output.m4
-===================================================================
---- mono.orig/m4/mono-output.m4
-+++ mono/m4/mono-output.m4
-@@ -51,7 +51,6 @@ AC_DEFUN([AC_MONO_OUTPUT], [
- 		mono/eglib/eglib-config.h
- 		mono/eglib/test/Makefile
- 		m4/Makefile
--		msvc/Makefile
- 		mono/utils/jemalloc/Makefile
- 		mono-uninstalled.pc
- 		acceptance-tests/Makefile
-Index: mono/mcs/class/System.Net.Http.Formatting/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Net.Http.Formatting/Makefile
-+++ mono/mcs/class/System.Net.Http.Formatting/Makefile
+ RESOURCE_DEFS = System.Json.Properties.Resources,System.Json/Properties/Resources.resx
+diff --git a/mcs/class/System.Net.Http.Formatting/Makefile b/mcs/class/System.Net.Http.Formatting/Makefile
+index 43895c0..dbba87e 100644
+--- a/mcs/class/System.Net.Http.Formatting/Makefile
++++ b/mcs/class/System.Net.Http.Formatting/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Net.Http.Formatting
 -SUBDIRS = 
@@ -273,10 +349,21 @@ Index: mono/mcs/class/System.Net.Http.Formatting/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Net.Http.Formatting.dll
-Index: mono/mcs/class/System.Web.Http.SelfHost/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.Http.SelfHost/Makefile
-+++ mono/mcs/class/System.Web.Http.SelfHost/Makefile
+diff --git a/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile b/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
+index 207310e..edbd959 100644
+--- a/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
++++ b/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Runtime.CompilerServices.Unsafe
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Runtime.CompilerServices.Unsafe.dll
+diff --git a/mcs/class/System.Web.Http.SelfHost/Makefile b/mcs/class/System.Web.Http.SelfHost/Makefile
+index f4ff7d4..1b2422b 100644
+--- a/mcs/class/System.Web.Http.SelfHost/Makefile
++++ b/mcs/class/System.Web.Http.SelfHost/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web.Http.SelfHost
 -SUBDIRS = 
@@ -285,10 +372,10 @@ Index: mono/mcs/class/System.Web.Http.SelfHost/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.Http.SelfHost.dll
-Index: mono/mcs/class/System.Web.Http.WebHost/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.Http.WebHost/Makefile
-+++ mono/mcs/class/System.Web.Http.WebHost/Makefile
+diff --git a/mcs/class/System.Web.Http.WebHost/Makefile b/mcs/class/System.Web.Http.WebHost/Makefile
+index b022ea3..dc1c71c 100644
+--- a/mcs/class/System.Web.Http.WebHost/Makefile
++++ b/mcs/class/System.Web.Http.WebHost/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web.Http.WebHost
  SUBDIRS = 
@@ -296,10 +383,10 @@ Index: mono/mcs/class/System.Web.Http.WebHost/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.Http.WebHost.dll
-Index: mono/mcs/class/System.Web.Http/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.Http/Makefile
-+++ mono/mcs/class/System.Web.Http/Makefile
+diff --git a/mcs/class/System.Web.Http/Makefile b/mcs/class/System.Web.Http/Makefile
+index 22be825..d8702d2 100644
+--- a/mcs/class/System.Web.Http/Makefile
++++ b/mcs/class/System.Web.Http/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web.Http
  SUBDIRS = 
@@ -307,10 +394,32 @@ Index: mono/mcs/class/System.Web.Http/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.Http.dll
-Index: mono/mcs/class/System.Web.WebPages.Deployment/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.WebPages.Deployment/Makefile
-+++ mono/mcs/class/System.Web.WebPages.Deployment/Makefile
+diff --git a/mcs/class/System.Web.Mvc3/Makefile b/mcs/class/System.Web.Mvc3/Makefile
+index 20b0edc..8f6df4d 100644
+--- a/mcs/class/System.Web.Mvc3/Makefile
++++ b/mcs/class/System.Web.Mvc3/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.Mvc3
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.Mvc3.dll
+diff --git a/mcs/class/System.Web.Razor/Makefile b/mcs/class/System.Web.Razor/Makefile
+index c329613..008a5b0 100644
+--- a/mcs/class/System.Web.Razor/Makefile
++++ b/mcs/class/System.Web.Razor/Makefile
+@@ -1,5 +1,6 @@
+ thisdir = class/System.Web.Razor
+ SUBDIRS = 
++include ../../build/config.make
+ include ../../build/rules.make
+ 
+ LIBRARY = System.Web.Razor.dll
+diff --git a/mcs/class/System.Web.WebPages.Deployment/Makefile b/mcs/class/System.Web.WebPages.Deployment/Makefile
+index bb1cd40..ed56670 100644
+--- a/mcs/class/System.Web.WebPages.Deployment/Makefile
++++ b/mcs/class/System.Web.WebPages.Deployment/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web.WebPages.Deployment
  SUBDIRS = 
@@ -318,10 +427,10 @@ Index: mono/mcs/class/System.Web.WebPages.Deployment/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.WebPages.Deployment.dll
-Index: mono/mcs/class/System.Web.WebPages.Razor/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.WebPages.Razor/Makefile
-+++ mono/mcs/class/System.Web.WebPages.Razor/Makefile
+diff --git a/mcs/class/System.Web.WebPages.Razor/Makefile b/mcs/class/System.Web.WebPages.Razor/Makefile
+index b9f7f8f..08b94c9 100644
+--- a/mcs/class/System.Web.WebPages.Razor/Makefile
++++ b/mcs/class/System.Web.WebPages.Razor/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web.WebPages.Razor
  SUBDIRS = 
@@ -329,10 +438,10 @@ Index: mono/mcs/class/System.Web.WebPages.Razor/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.WebPages.Razor.dll
-Index: mono/mcs/class/System.Web.WebPages/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.WebPages/Makefile
-+++ mono/mcs/class/System.Web.WebPages/Makefile
+diff --git a/mcs/class/System.Web.WebPages/Makefile b/mcs/class/System.Web.WebPages/Makefile
+index 91e1581..081cb2c 100644
+--- a/mcs/class/System.Web.WebPages/Makefile
++++ b/mcs/class/System.Web.WebPages/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web.WebPages
  SUBDIRS = 
@@ -340,63 +449,10 @@ Index: mono/mcs/class/System.Web.WebPages/Makefile
  include ../../build/rules.make
  
  LIBRARY = System.Web.WebPages.dll
-Index: mono/mcs/build/rules.make
-===================================================================
---- mono.orig/mcs/build/rules.make
-+++ mono/mcs/build/rules.make
-@@ -57,9 +57,14 @@ INTERNAL_CSC_LOCATION = $(CSC_LOCATION)
- # Using CSC_SDK_PATH_DISABLED for sanity check that all references have path specified
- INTERNAL_CSC = CSC_SDK_PATH_DISABLED= $(RUNTIME) $(RUNTIME_FLAGS) $(CSC_RUNTIME_FLAGS) $(INTERNAL_CSC_LOCATION)
- 
-+ifdef USE_SYSTEM_MONO
-+RESGEN = resgen
-+ILASM = ilasm
-+else
- RESGEN = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/resgen.exe
--STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
- ILASM = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/ilasm.exe
-+endif
-+STRING_REPLACER = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/cil-stringreplacer.exe
- GENSOURCES = MONO_PATH="$(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)$(PLATFORM_PATH_SEPARATOR)$$MONO_PATH" $(RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/gensources.exe
- 
- depsdir = $(topdir)/build/deps
-Index: mono/mcs/class/corlib/Makefile
-===================================================================
---- mono.orig/mcs/class/corlib/Makefile
-+++ mono/mcs/class/corlib/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/corlib
- SUBDIRS =
-+include ../../build/config.make
- include ../../build/rules.make
- export __SECURITY_BOOTSTRAP_DB=$(topdir)/class/corlib
- 
-Index: mono/mcs/class/Mono.Directory.LDAP/Makefile
-===================================================================
---- mono.orig/mcs/class/Mono.Directory.LDAP/Makefile
-+++ mono/mcs/class/Mono.Directory.LDAP/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/Mono.Directory.LDAP
- SUBDIRS = 
-+include ../../build/config.make
- include ../../build/rules.make
- 
- LIBRARY = Mono.Directory.LDAP.dll
-Index: mono/mcs/class/Novell.Directory.Ldap/Makefile
-===================================================================
---- mono.orig/mcs/class/Novell.Directory.Ldap/Makefile
-+++ mono/mcs/class/Novell.Directory.Ldap/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/Novell.Directory.Ldap
- SUBDIRS = 
-+include ../../build/config.make
- include ../../build/rules.make
- 
- LIBRARY = Novell.Directory.Ldap.dll
-Index: mono/mcs/class/System.Web/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web/Makefile
-+++ mono/mcs/class/System.Web/Makefile
+diff --git a/mcs/class/System.Web/Makefile b/mcs/class/System.Web/Makefile
+index 375c3f0..96481cd 100644
+--- a/mcs/class/System.Web/Makefile
++++ b/mcs/class/System.Web/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/System.Web
  SUBDIRS = Test
@@ -425,65 +481,31 @@ Index: mono/mcs/class/System.Web/Makefile
  
  run-aaa: test
  	$(TEST_RUNTIME) $(TEST_RUNTIME_FLAGS) $(TEST_HARNESS) $(TEST_HARNESS_FLAGS) $(LOCAL_TEST_HARNESS_FLAGS) \
-Index: mono/mcs/class/System.Web.Razor/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.Razor/Makefile
-+++ mono/mcs/class/System.Web.Razor/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/System.Web.Razor
- SUBDIRS = 
+diff --git a/mcs/class/System.Windows.Forms/Makefile b/mcs/class/System.Windows.Forms/Makefile
+index 8877bcc..88fd75f 100644
+--- a/mcs/class/System.Windows.Forms/Makefile
++++ b/mcs/class/System.Windows.Forms/Makefile
+@@ -1,4 +1,5 @@
+ thisdir = class/System.Windows.Forms
 +include ../../build/config.make
  include ../../build/rules.make
  
- LIBRARY = System.Web.Razor.dll
-Index: mono/mcs/class/System.Web.Mvc3/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Web.Mvc3/Makefile
-+++ mono/mcs/class/System.Web.Mvc3/Makefile
+ LIBRARY = System.Windows.Forms.dll
+diff --git a/mcs/class/corlib/Makefile b/mcs/class/corlib/Makefile
+index e399631..c3fe92e 100644
+--- a/mcs/class/corlib/Makefile
++++ b/mcs/class/corlib/Makefile
 @@ -1,5 +1,6 @@
- thisdir = class/System.Web.Mvc3
- SUBDIRS = 
+ thisdir = class/corlib
+ SUBDIRS =
 +include ../../build/config.make
  include ../../build/rules.make
+ export __SECURITY_BOOTSTRAP_DB=$(topdir)/class/corlib
  
- LIBRARY = System.Web.Mvc3.dll
-Index: mono/mcs/class/System.Data.Services.Client/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Data.Services.Client/Makefile
-+++ mono/mcs/class/System.Data.Services.Client/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/System.Data.Services.Client
- SUBDIRS = 
-+include ../../build/config.make
- include ../../build/rules.make
- 
- LIBRARY = System.Data.Services.Client.dll
-Index: mono/mcs/class/System.Json.Microsoft/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Json.Microsoft/Makefile
-+++ mono/mcs/class/System.Json.Microsoft/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/System.Json.Microsoft
- SUBDIRS = 
-+include ../../build/config.make
- include ../../build/rules.make
- 
- RESOURCE_DEFS = System.Json.Properties.Resources,System.Json/Properties/Resources.resx
-Index: mono/mcs/class/System.ComponentModel.Composition.4.5/Makefile
-===================================================================
---- mono.orig/mcs/class/System.ComponentModel.Composition.4.5/Makefile
-+++ mono/mcs/class/System.ComponentModel.Composition.4.5/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/System.ComponentModel.Composition.4.5
- SUBDIRS = 
-+include ../../build/config.make
- include ../../build/rules.make
- 
- LIBRARY = System.ComponentModel.Composition.dll
-Index: mono/mcs/class/corlib/il/Makefile
-===================================================================
---- mono.orig/mcs/class/corlib/il/Makefile
-+++ mono/mcs/class/corlib/il/Makefile
+diff --git a/mcs/class/corlib/il/Makefile b/mcs/class/corlib/il/Makefile
+index 8493711..01970a4 100644
+--- a/mcs/class/corlib/il/Makefile
++++ b/mcs/class/corlib/il/Makefile
 @@ -1,5 +1,6 @@
  thisdir = class/corlib/il
  
@@ -491,40 +513,38 @@ Index: mono/mcs/class/corlib/il/Makefile
  include ../../../build/rules.make
  include il.make
  
-Index: mono/mcs/build/profiles/build.make
-===================================================================
---- mono.orig/mcs/build/profiles/build.make
-+++ mono/mcs/build/profiles/build.make
-@@ -30,7 +30,11 @@ endif
- # Special setup for boostrap tools which we want to run with system/monolite core libraries
- # for all libraries build as part of this profile
- #
-+ifdef USE_SYSTEM_MONO
-+ILASM = ilasm
-+else
- ILASM = $(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/ilasm.exe
-+endif
- STRING_REPLACER = $(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/cil-stringreplacer.exe
- GENSOURCES =$(PROFILE_RUNTIME) $(RUNTIME_FLAGS) $(topdir)/class/lib/$(BUILD_TOOLS_PROFILE)/tmp/gensources.exe
+diff --git a/mcs/tools/Makefile b/mcs/tools/Makefile
+index f774b6f..8818379 100644
+--- a/mcs/tools/Makefile
++++ b/mcs/tools/Makefile
+@@ -52,7 +52,7 @@ net_4_5_dirs := \
+ 	gacutil
  
-Index: mono/mcs/class/System.Windows.Forms/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Windows.Forms/Makefile
-+++ mono/mcs/class/System.Windows.Forms/Makefile
-@@ -1,4 +1,5 @@
- thisdir = class/System.Windows.Forms
-+include ../../build/config.make
- include ../../build/rules.make
+ build_SUBDIRS =
+-build_PARALLEL_SUBDIRS := resgen gacutil security culevel upload-to-sentry mono-helix-client commoncryptogenerator resx2sr linker cil-strip corcompare mono-api-diff mono-api-html
++build_PARALLEL_SUBDIRS := resgen gacutil security culevel upload-to-sentry commoncryptogenerator resx2sr linker cil-strip corcompare mono-api-diff mono-api-html
+ monodroid_tools_SUBDIRS =
+ monodroid_tools_PARALLEL_SUBDIRS = aprofutil cil-strip linker-analyzer mkbundle mdoc mono-symbolicate corcompare mono-api-diff mono-api-html pdb2mdb nunit-lite
+ monodroid_SUBDIRS = nunit-lite
+@@ -68,7 +68,7 @@ net_4_x_PARALLEL_SUBDIRS = $(net_4_5_dirs)
+ wasm_tools_SUBDIRS =
+ wasm_tools_PARALLEL_SUBDIRS = linker wasm-tuner cil-strip
  
- LIBRARY = System.Windows.Forms.dll
-Index: mono/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
-===================================================================
---- mono.orig/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
-+++ mono/mcs/class/System.Runtime.CompilerServices.Unsafe/Makefile
-@@ -1,5 +1,6 @@
- thisdir = class/System.Runtime.CompilerServices.Unsafe
- SUBDIRS = 
-+include ../../build/config.make
- include ../../build/rules.make
+-DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry mono-helix-client
++DIST_SUBDIRS = $(net_4_5_dirs) cil-stringreplacer commoncryptogenerator resx2sr gensources upload-to-sentry
  
- LIBRARY = System.Runtime.CompilerServices.Unsafe.dll
+ include ../build/rules.make
+ 
+diff --git a/runtime/Makefile.am b/runtime/Makefile.am
+index 9e29cb5..b0bf0e7 100644
+--- a/runtime/Makefile.am
++++ b/runtime/Makefile.am
+@@ -34,7 +34,7 @@ SUPPORT_FILES = $(symlinks) mono-wrapper etc/mono/config
+ build_profiles = 
+ 
+ if INSTALL_4_x
+-build_profiles += binary_reference_assemblies net_4_x xbuild_12 xbuild_14
++build_profiles += net_4_x xbuild_12 xbuild_14
+ net_profile = net_4_x
+ endif
+ 

@@ -4,16 +4,15 @@ Subject: Using external jay tool
 
 ---
  mcs/class/Commons.Xml.Relaxng/Makefile | 2 +-
- mcs/class/Microsoft.Build/Makefile     | 2 +-
  mcs/class/Mono.CSharp/Makefile         | 2 +-
  mcs/ilasm/Makefile                     | 2 +-
  mcs/mcs/Makefile                       | 2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-Index: mono/mcs/class/Commons.Xml.Relaxng/Makefile
-===================================================================
---- mono.orig/mcs/class/Commons.Xml.Relaxng/Makefile
-+++ mono/mcs/class/Commons.Xml.Relaxng/Makefile
+diff --git a/mcs/class/Commons.Xml.Relaxng/Makefile b/mcs/class/Commons.Xml.Relaxng/Makefile
+index c508f06..d431350 100644
+--- a/mcs/class/Commons.Xml.Relaxng/Makefile
++++ b/mcs/class/Commons.Xml.Relaxng/Makefile
 @@ -27,7 +27,7 @@ EXTRA_DISTFILES = \
  	$(TEST_RESOURCE_FILES)
  
@@ -23,11 +22,11 @@ Index: mono/mcs/class/Commons.Xml.Relaxng/Makefile
  
  BUILT_SOURCES = Commons.Xml.Relaxng.Rnc/RncParser.cs
  
-Index: mono/mcs/class/Mono.CSharp/Makefile
-===================================================================
---- mono.orig/mcs/class/Mono.CSharp/Makefile
-+++ mono/mcs/class/Mono.CSharp/Makefile
-@@ -30,7 +30,7 @@ LIB_MCS_FLAGS += $(REFERENCE_SOURCES_FLA
+diff --git a/mcs/class/Mono.CSharp/Makefile b/mcs/class/Mono.CSharp/Makefile
+index a1c1e63..3719f1f 100644
+--- a/mcs/class/Mono.CSharp/Makefile
++++ b/mcs/class/Mono.CSharp/Makefile
+@@ -30,7 +30,7 @@ LIB_MCS_FLAGS += $(REFERENCE_SOURCES_FLAGS)
  BUILT_SOURCES = $(PROFILE)-parser.cs
  
  $(PROFILE)-parser.cs: $(topdir)/mcs/cs-parser.jay $(topdir)/jay/skeleton.cs
@@ -36,10 +35,10 @@ Index: mono/mcs/class/Mono.CSharp/Makefile
  
  include ../../build/library.make
  
-Index: mono/mcs/ilasm/Makefile
-===================================================================
---- mono.orig/mcs/ilasm/Makefile
-+++ mono/mcs/ilasm/Makefile
+diff --git a/mcs/ilasm/Makefile b/mcs/ilasm/Makefile
+index 434764e..8da8ead 100644
+--- a/mcs/ilasm/Makefile
++++ b/mcs/ilasm/Makefile
 @@ -23,7 +23,7 @@ EXTRA_DISTFILES = \
  	$(wildcard tests/*.il)
  
@@ -49,10 +48,10 @@ Index: mono/mcs/ilasm/Makefile
  
  include ../build/executable.make
  
-Index: mono/mcs/mcs/Makefile
-===================================================================
---- mono.orig/mcs/mcs/Makefile
-+++ mono/mcs/mcs/Makefile
+diff --git a/mcs/mcs/Makefile b/mcs/mcs/Makefile
+index dbf040a..d1d434d 100644
+--- a/mcs/mcs/Makefile
++++ b/mcs/mcs/Makefile
 @@ -32,7 +32,7 @@ BUILT_SOURCES = cs-parser.cs
  CLEAN_FILES += y.output
  
