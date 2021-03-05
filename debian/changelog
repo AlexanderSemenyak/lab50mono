@@ -1,3 +1,9 @@
+mono (6.12.0.114-0labft11) testing; urgency=medium
+
+  * Удалены одинаковые в файлы в libmono и libmono-dev.
+
+ -- Лаборатория 50 <team@lab50.net>  Fri, 05 Mar 2021 17:37:13 +0300
+
 mono (6.12.0.114-0labft10) testing; urgency=medium
 
   * Класс System.Runtime.CompilerServices.Unsafe теперь публичный в
