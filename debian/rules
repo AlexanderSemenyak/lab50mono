@@ -44,9 +44,9 @@ endif
 ifneq ($(filter cert,$(DEB_BUILD_PROFILES)),)
   CONFIGIRE_PROFILE += --enable-system-aot
 else
+  CONFIGIRE_PROFILE += --disable-system-aot
 ifneq (,$(filter $(DEB_HOST_ARCH), arm64 armhf amd64))
-  CONFIGIRE_PROFILE += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/ \
-    --disable-system-aot
+  CONFIGIRE_PROFILE += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/
 endif
 endif
 
@@ -72,8 +72,6 @@ override_dh_auto_build:
 	$(MAKE) -C debian/detector
 	csc -target:exe -out:debian/MonoGetAssemblyName.exe \
 	  debian/MonoGetAssemblyName.cs
-
-	chmod +x debian/dh_monoaot
 
 override_dh_auto_clean:
 	dh_auto_clean
