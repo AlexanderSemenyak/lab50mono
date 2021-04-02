@@ -11,3 +11,4 @@ fix-tests.patch
 0011-fix-multiarch-build.patch
 0012-Using-system-zlib-header.patch
 0013-Add-System.Runtime.CompilerServices.Unsafe-public-in.patch
+multilib-aot-paths.patch

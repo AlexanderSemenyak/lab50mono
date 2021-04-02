@@ -19,6 +19,8 @@ with_docs = $(if $(findstring nodoc, $(DEB_BUILD_OPTIONS)),,yes)
 
 with_devel = $(if $(findstring cert, $(DEB_BUILD_PROFILES)),,yes)
 
+certified = $(if $(findstring cert, $(DEB_BUILD_PROFILES)),yes,)
+
 ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
   CONF_FLAGS += --build $(DEB_HOST_GNU_TYPE)
 else
@@ -33,21 +35,20 @@ ifeq ($(DEB_HOST_ARCH), armel)
   CONF_FLAGS += --with-fpu=NONE
 endif
 
-ifneq (,$(filter $(DEB_HOST_ARCH), arm64 armhf amd64))
-  CONF_FLAGS += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/ 
-endif
-
 ifeq ($(with_docs),yes)
   CONFIGURE_PROFILE += --with-mcs-docs=yes
 else
   CONFIGURE_PROFILE += --with-mcs-docs=no
 endif
 
-#ifneq ($(filter cert,$(DEB_BUILD_PROFILES)),)
-#  CONFIGURE_PROFILE =
-#else
-#  CONFIGURE_PROFILE =
-#endif
+ifneq ($(filter cert,$(DEB_BUILD_PROFILES)),)
+  CONFIGIRE_PROFILE += --enable-system-aot
+else
+ifneq (,$(filter $(DEB_HOST_ARCH), arm64 armhf amd64))
+  CONFIGIRE_PROFILE += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/ \
+    --disable-system-aot
+endif
+endif
 
 %:
 	dh $@
@@ -58,7 +59,6 @@ override_dh_auto_configure:
 		--infodir=\$${prefix}/share/info --sysconfdir=/etc \
 		--with-ikvm-native=no \
 		--disable-quiet-build \
-		--disable-system-aot \
 		--with-csc=roslyn \
 		--disable-boehm \
 		--with-sgen=yes --with-sgen-default-concurrent=yes \
@@ -124,10 +124,15 @@ override_dh_strip:
 	dh_strip -a
 	debian/dh_clistrip -i --dbg-package=mono-dbg
 
+override_dh_strip_nondeterminism:
+ifeq ($(certified),yes)
+	dh_aot -XSystem.dll -Xmscorlib.dll
+endif
+	dh_strip_nondeterminism
+
 override_dh_fixperms:
 	dh_fixperms -X/usr/share/cli-common/runtimes.d/mono
 	debian/dh_clifixperms -i
-	DH_AUTOSCRIPTDIR=$(CURDIR)/debian debian/dh_monoaot -i
 
 override_dh_makeshlibs:
 	dh_makeshlibs -a

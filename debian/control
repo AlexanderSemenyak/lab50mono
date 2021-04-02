@@ -9,7 +9,9 @@ Build-Depends: debhelper (>= 10),
 	gcc (>= 4:4.7) | gcc-4.7,
 	g++ (>= 4:4.7) | g++-4.7,
 	git,
-	mono-llvm-dev [amd64 arm64 armhf],
+	cli-common-dev (>= 0.11-0labft3) <cert>,
+	mono-llvm-dev [amd64 arm64 armhf] <!cert>,
+	libmono-llvm | mono-llvm-support <cert>,
 	mono-microsoft-net-compilers-toolset <!pkg.mono.initial>,
 	mono-reference-assemblies-cil <!pkg.mono.initial>,
 	mono-roslyn <pkg.mono.initial>,
@@ -30,12 +32,12 @@ Build-Depends: debhelper (>= 10),
 	pkg-config
 Standards-Version: 4.5.1
 Homepage: http://www.mono-project.com/
-Vcs-Git: https://gitlab.com/gosmono/mono.git
-Vcs-Browser: https://gitlab.com/gosmono/mono
+Vcs-Git: https://gitlab.com/lab50/mono/mono.git
+Vcs-Browser: https://gitlab.com/lab50/mono/mono
 
 Package: mono-runtime
 Architecture: any
-Provides: cli-runtime, cli-virtual-machine
+Provides: cli-runtime, cli-virtual-machine, mono-runtime-sgen
 Depends: ${shlibs:Depends}, ${misc:Depends},
          binutils,
          mono-gac (= ${source:Version})
@@ -44,7 +46,7 @@ Breaks: mono-runtime-common (<< 6.12.0.114-0labft7),
  mono-runtime-boehm (<< 6.12.0.114-0labft7)
 Replaces: mono-runtime-common,
  mono-runtime-sgen
-Recommends: binfmt-support (>= 1.1.2), mono-llvm-support
+Recommends: binfmt-support (>= 1.1.2), libmono-llvm
 Suggests: xdg-utils
 Description: Mono runtime
  Mono is a platform for running and developing applications based on the
@@ -62,14 +64,15 @@ Description: Mono runtime
  This package uses SGen which is Mono's new simple generational garbage
  collector.
 
-Package: mono-llvm-support
+Package: libmono-llvm
+Build-Profiles: <!cert>
 Architecture: amd64 armhf arm64
 Depends: ${shlibs:Depends},
          ${misc:Depends},
-         mono-llvm-tools,
-         mono-runtime (= ${binary:Version})
+         mono-llvm-tools
+Provides: mono-llvm-support
 Homepage: http://www.mono-project.com/Compacting_GC
-Description: Mono runtime - SGen
+Description: Mono runtime - LLVM support
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
  Mono provides a complete CLR (Common Language Runtime) including compiler and
@@ -135,7 +138,7 @@ Build-Profiles: <!cert>
 Architecture: any
 Depends: ${misc:Depends},
          mono-runtime (= ${binary:Version}),
-         mono-llvm-support (= ${binary:Version}) [amd64],
+         libmono-llvm (= ${binary:Version}) [amd64],
          libmono-2.0-1 (= ${binary:Version}),
          libmono-profiler (= ${binary:Version}),
          mono-utils (= ${binary:Version}),
@@ -149,7 +152,7 @@ Depends: ${misc:Depends},
          referenceassemblies-pcl,
          msbuild,
          ca-certificates-mono (= ${source:Version})
-Suggests: mono-llvm-support (= ${binary:Version}) [armhf arm64]
+Suggests: libmono-llvm (= ${binary:Version}) [armhf arm64]
 Description: complete Mono runtime, development tools and all libraries
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.

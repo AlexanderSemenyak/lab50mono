@@ -1,0 +1,75 @@
+Index: mono/mono/metadata/Makefile.am
+===================================================================
+--- mono.orig/mono/metadata/Makefile.am
++++ mono/mono/metadata/Makefile.am
+@@ -125,7 +125,7 @@ mono-config-dirs.lo: Makefile
+ libmonoruntime_config_la_SOURCES = \
+ 	mono-config-dirs.h		\
+ 	mono-config-dirs.c
+-libmonoruntime_config_la_CPPFLAGS = $(AM_CPPFLAGS) -DMONO_BINDIR=\"$(bindir)/\" -DMONO_ASSEMBLIES=\"$(assembliesdir)\" -DMONO_CFG_DIR=\"$(confdir)\" -DMONO_RELOC_LIBDIR=\"$(reloc_libdir)\" @CXX_ADD_CFLAGS@
++libmonoruntime_config_la_CPPFLAGS = $(AM_CPPFLAGS) -DMONO_BINDIR=\"$(bindir)/\" -DMONO_ASSEMBLIES=\"$(assembliesdir)\" -DMONO_CFG_DIR=\"$(confdir)\" -DMONO_RELOC_LIBDIR=\"$(reloc_libdir)\" -DMONO_STATE_DIR=\"$(localstatedir)\" @CXX_ADD_CFLAGS@
+ 
+ #
+ # Support is a separate library because it is not valid C++.
+Index: mono/mono/metadata/mono-config-dirs.c
+===================================================================
+--- mono.orig/mono/metadata/mono-config-dirs.c
++++ mono/mono/metadata/mono-config-dirs.c
+@@ -51,3 +51,13 @@ mono_config_get_reloc_lib_dir (void)
+ #endif
+ }
+ 
++const char*
++mono_config_get_localstate_dir (void)
++{
++#ifdef MONO_STATE_DIR
++	return MONO_STATE_DIR;
++#else
++	return NULL;
++#endif
++}
++
+Index: mono/mono/metadata/mono-config-dirs.h
+===================================================================
+--- mono.orig/mono/metadata/mono-config-dirs.h
++++ mono/mono/metadata/mono-config-dirs.h
+@@ -20,4 +20,7 @@ mono_config_get_bin_dir (void);
+ const char*
+ mono_config_get_reloc_lib_dir (void);
+ 
++const char*
++mono_config_get_localstate_dir (void);
++
+ #endif
+Index: mono/mono/mini/aot-runtime.c
+===================================================================
+--- mono.orig/mono/mini/aot-runtime.c
++++ mono/mono/mini/aot-runtime.c
+@@ -54,6 +54,7 @@
+ #include <mono/metadata/gc-internals.h>
+ #include <mono/metadata/threads-types.h>
+ #include <mono/metadata/mono-endian.h>
++#include <mono/metadata/mono-config-dirs.h>
+ #include <mono/utils/mono-logger-internals.h>
+ #include <mono/utils/mono-mmap.h>
+ #include <mono/utils/mono-compiler.h>
+@@ -2177,7 +2178,18 @@ load_aot_module (MonoAssemblyLoadContext
+ #ifndef PLATFORM_ANDROID
+ 		if (!sofile) {
+ 			char *basename = g_path_get_basename (assembly->image->name);
+-			aot_name = g_strdup_printf ("%s/mono/aot-cache/%s/%s%s", mono_assembly_getrootdir(), MONO_ARCHITECTURE, basename, MONO_SOLIB_EXT);
++			aot_name = g_strdup_printf ("%s/mono/%s%s", mono_config_get_localstate_dir(), basename, MONO_SOLIB_EXT);
++			g_free (basename);
++			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
++			if (!sofile) {
++				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' not found: %s", aot_name, err);
++				g_free (err);
++			}
++			g_free (aot_name);
++		}
++		if (!sofile) {
++			char *basename = g_path_get_basename (assembly->image->name);
++			aot_name = g_strdup_printf ("%s/mono/aot/%s%s", mono_native_getrootdir(), basename, MONO_SOLIB_EXT);
+ 			g_free (basename);
+ 			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
+ 			if (!sofile) {
