@@ -41,7 +41,7 @@ else
   CONFIGURE_PROFILE += --with-mcs-docs=no
 endif
 
-ifneq ($(filter cert,$(DEB_BUILD_PROFILES)),)
+ifeq ($(certified),yes)
   CONFIGIRE_PROFILE += --enable-system-aot
 else
   CONFIGIRE_PROFILE += --disable-system-aot
@@ -116,6 +116,7 @@ endif
 
 override_dh_install:
 	dh_install --list-missing
+	dh_install -plibmono-corlib4.5-cil usr/lib/mono/4.5/mscorlib.dll.so usr/lib/${DEB_HOST_MULTIARCH}/mono/aot
 
 override_dh_strip:
 	dh_strip -pmono-runtime --dbg-package=mono-runtime-dbg
