@@ -53,23 +53,53 @@ Index: mono/mono/mini/aot-runtime.c
  #include <mono/utils/mono-logger-internals.h>
  #include <mono/utils/mono-mmap.h>
  #include <mono/utils/mono-compiler.h>
-@@ -2177,7 +2178,18 @@ load_aot_module (MonoAssemblyLoadContext
+@@ -2168,8 +2169,8 @@ load_aot_module (MonoAssemblyLoadContext
+ 			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
+ 			if (sofile) {
+ 				found_aot_name = g_strdup (aot_name);
++				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' found", aot_name);
+ 			} else {
+-				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' not found: %s", aot_name, err);
+ 				g_free (err);
+ 			}
+ 			g_free (aot_name);
+@@ -2177,13 +2178,26 @@ load_aot_module (MonoAssemblyLoadContext
  #ifndef PLATFORM_ANDROID
  		if (!sofile) {
  			char *basename = g_path_get_basename (assembly->image->name);
 -			aot_name = g_strdup_printf ("%s/mono/aot-cache/%s/%s%s", mono_assembly_getrootdir(), MONO_ARCHITECTURE, basename, MONO_SOLIB_EXT);
 +			aot_name = g_strdup_printf ("%s/mono/%s%s", mono_config_get_localstate_dir(), basename, MONO_SOLIB_EXT);
-+			g_free (basename);
-+			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
-+			if (!sofile) {
-+				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' not found: %s", aot_name, err);
-+				g_free (err);
-+			}
+ 			g_free (basename);
+ 			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
+ 			if (!sofile) {
+-				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' not found: %s", aot_name, err);
+ 				g_free (err);
+-			}
++			} else {
++				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' found", aot_name);
++                        }
 +			g_free (aot_name);
 +		}
 +		if (!sofile) {
 +			char *basename = g_path_get_basename (assembly->image->name);
 +			aot_name = g_strdup_printf ("%s/mono/aot/%s%s", mono_native_getrootdir(), basename, MONO_SOLIB_EXT);
- 			g_free (basename);
- 			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
- 			if (!sofile) {
++			g_free (basename);
++			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
++			if (!sofile) {
++				g_free (err);
++			} else {
++				mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' found", aot_name);
++                        }
+ 			g_free (aot_name);
+ 		}
+ #endif
+@@ -2198,8 +2212,8 @@ load_aot_module (MonoAssemblyLoadContext
+ 				sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
+ 				if (sofile) {
+ 					found_aot_name = g_strdup (aot_name);
++					mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' found", aot_name);
+ 				} else {
+-					mono_trace (G_LOG_LEVEL_INFO, MONO_TRACE_AOT, "AOT: image '%s' not found: %s", aot_name, err);
+ 					g_free (err);
+ 				}
+ 				g_free (basename);

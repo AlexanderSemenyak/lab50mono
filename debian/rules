@@ -125,7 +125,7 @@ override_dh_strip:
 
 override_dh_strip_nondeterminism:
 ifeq ($(certified),yes)
-	dh_aot -XSystem.dll -Xmscorlib.dll
+	dh_aot -XSystem.dll -Xmscorlib.dll -XSystem.Core.dll
 endif
 	dh_strip_nondeterminism
 
