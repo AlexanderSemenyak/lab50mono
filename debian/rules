@@ -123,11 +123,11 @@ override_dh_strip:
 	dh_strip -a
 	debian/dh_clistrip -i --dbg-package=mono-dbg
 
-override_dh_strip_nondeterminism:
-ifeq ($(certified),yes)
-	dh_aot -XSystem.dll -Xmscorlib.dll -XSystem.Core.dll
-endif
-	dh_strip_nondeterminism
+#override_dh_strip_nondeterminism:
+#ifeq ($(certified),yes)
+#	dh_aot -XSystem.dll -Xmscorlib.dll -XSystem.Core.dll
+#endif
+#	dh_strip_nondeterminism
 
 override_dh_fixperms:
 	dh_fixperms -X/usr/share/cli-common/runtimes.d/mono
