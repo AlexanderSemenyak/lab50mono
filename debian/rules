@@ -205,5 +205,5 @@ endif
 override_dh_shlibdeps:
 #	dh_shlibdeps -a
 	dh_shlibdeps -a -Xlibmono-profiler-cov
-	debian/dh_clideps -i -l debian/tmp
+	debian/dh_clideps -l debian/tmp
 	debian/dh_clideps -p mono-4.0-gac -r
