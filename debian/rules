@@ -42,11 +42,11 @@ else
 endif
 
 ifeq ($(certified),yes)
-  CONFIGIRE_PROFILE += --enable-system-aot
+  CONFIGURE_PROFILE += --enable-system-aot
 else
-  CONFIGIRE_PROFILE += --disable-system-aot
+  CONFIGURE_PROFILE += --disable-system-aot
 ifneq (,$(filter $(DEB_HOST_ARCH), arm64 armhf amd64))
-  CONFIGIRE_PROFILE += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/
+  CONFIGURE_PROFILE += --enable-llvm --enable-loadedllvm --with-llvm=/usr/lib/mono/llvm/
 endif
 endif
 
