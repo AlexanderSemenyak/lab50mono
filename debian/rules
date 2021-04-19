@@ -144,9 +144,7 @@ override_dh_makeshlibs:
 	debian/dh_makeclilibs -p libmono-corlib4.5-cil -m 4.0.0~alpha1
 ifeq ($(with_devel),yes)
 	debian/dh_makeclilibs -p libmono-csharp4.0c-cil -m 4.0.0~alpha1
-endif
 	debian/dh_makeclilibs -p libmono-data-tds4.0-cil -m 3.12.0
-ifeq ($(with_devel),yes)
 	debian/dh_makeclilibs -p libmono-debugger-soft4.0a-cil -m 3.12.0
 endif
 	debian/dh_makeclilibs -p libmono-i18n4.0-cil -m 4.0.0~alpha1

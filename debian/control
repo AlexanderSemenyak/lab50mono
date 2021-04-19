@@ -1056,6 +1056,7 @@ Description: Mono Security library (for CLI 4.0)
  This package contains the Mono Security library for CLI 4.0.
 
 Package: libmono-data-tds4.0-cil
+Build-Profiles: <!cert>
 Architecture: all
 Depends: ${misc:Depends}, ${cli:Depends}
 Description: Mono Data Library (for CLI 4.0)
