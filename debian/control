@@ -29,7 +29,8 @@ Build-Depends: debhelper (>= 10),
 	python,
 	automake,
 	clang <!nocheck>,
-	pkg-config
+	pkg-config,
+	dh-gostsign-lab50 <cert>
 Standards-Version: 4.5.1
 Homepage: http://www.mono-project.com/
 Vcs-Git: https://gitlab.com/lab50/mono/mono.git

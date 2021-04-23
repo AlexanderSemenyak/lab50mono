@@ -51,7 +51,11 @@ endif
 endif
 
 %:
+ifeq ($(certified),yes)
+	dh $@ --with gostsign
+else
 	dh $@
+endif
 
 override_dh_auto_configure:
 	dh_auto_configure -- $(CONF_FLAGS) --prefix=/usr \
@@ -130,6 +134,8 @@ override_dh_strip:
 #	dh_aot -XSystem.dll -Xmscorlib.dll -XSystem.Core.dll
 #endif
 #	dh_strip_nondeterminism
+override_dh_gostsign:
+	dh_gostsign -- --no-default-keyring --home=/gnupg
 
 override_dh_fixperms:
 	dh_fixperms -X/usr/share/cli-common/runtimes.d/mono
