@@ -15,7 +15,7 @@ if [ "$1" = "configure" ]; then
                 --slave /usr/share/man/man1/cli.1.gz cli.1.gz /usr/share/man/man1/mono.1.gz
 	ldconfig
 fi
-        
+
 mkdir -p /etc/mono/registry/LocalMachine/
 
 #DEBHELPER#

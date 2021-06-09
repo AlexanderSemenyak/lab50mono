@@ -1,6 +1,12 @@
+mono (6.12.0.114-0labft15) testing; urgency=medium
+
+  * Очистка /etc/mono/registry после полного удаления пакета mono-runtime.
+
+ -- Лаборатория 50 <team@lab50.net>  Wed, 09 Jun 2021 13:27:28 +0300
+
 mono (6.12.0.114-0labft14) testing; urgency=medium
 
-  * Очистка /etc/mono/certstore после полного удаления пакатов.
+  * Очистка /etc/mono/certstore после полного удаления пакетов.
   * Вызов cert-sync только при его наличии.
 
  -- Лаборатория 50 <team@lab50.net>  Wed, 09 Jun 2021 12:05:06 +0300
