@@ -1,7 +1,19 @@
-Index: mono/mono/metadata/Makefile.am
+From: =?utf-8?b?0JvQsNCx0L7RgNCw0YLQvtGA0LjRjyA1MA==?= <team@lab50.net>
+Date: Fri, 11 Jun 2021 13:01:24 +0300
+Subject: multilib-aot-paths
+
 ===================================================================
---- mono.orig/mono/metadata/Makefile.am
-+++ mono/mono/metadata/Makefile.am
+---
+ mono/metadata/Makefile.am        |  2 +-
+ mono/metadata/mono-config-dirs.c | 10 ++++++++++
+ mono/metadata/mono-config-dirs.h |  3 +++
+ mono/mini/aot-runtime.c          | 24 +++++++++++++++++++-----
+ 4 files changed, 33 insertions(+), 6 deletions(-)
+
+diff --git a/mono/metadata/Makefile.am b/mono/metadata/Makefile.am
+index 682347c..d437fa8 100644
+--- a/mono/metadata/Makefile.am
++++ b/mono/metadata/Makefile.am
 @@ -125,7 +125,7 @@ mono-config-dirs.lo: Makefile
  libmonoruntime_config_la_SOURCES = \
  	mono-config-dirs.h		\
@@ -11,10 +23,10 @@ Index: mono/mono/metadata/Makefile.am
  
  #
  # Support is a separate library because it is not valid C++.
-Index: mono/mono/metadata/mono-config-dirs.c
-===================================================================
---- mono.orig/mono/metadata/mono-config-dirs.c
-+++ mono/mono/metadata/mono-config-dirs.c
+diff --git a/mono/metadata/mono-config-dirs.c b/mono/metadata/mono-config-dirs.c
+index b526b41..3c166be 100644
+--- a/mono/metadata/mono-config-dirs.c
++++ b/mono/metadata/mono-config-dirs.c
 @@ -51,3 +51,13 @@ mono_config_get_reloc_lib_dir (void)
  #endif
  }
@@ -29,10 +41,10 @@ Index: mono/mono/metadata/mono-config-dirs.c
 +#endif
 +}
 +
-Index: mono/mono/metadata/mono-config-dirs.h
-===================================================================
---- mono.orig/mono/metadata/mono-config-dirs.h
-+++ mono/mono/metadata/mono-config-dirs.h
+diff --git a/mono/metadata/mono-config-dirs.h b/mono/metadata/mono-config-dirs.h
+index d0755f3..4c9570d 100644
+--- a/mono/metadata/mono-config-dirs.h
++++ b/mono/metadata/mono-config-dirs.h
 @@ -20,4 +20,7 @@ mono_config_get_bin_dir (void);
  const char*
  mono_config_get_reloc_lib_dir (void);
@@ -41,10 +53,10 @@ Index: mono/mono/metadata/mono-config-dirs.h
 +mono_config_get_localstate_dir (void);
 +
  #endif
-Index: mono/mono/mini/aot-runtime.c
-===================================================================
---- mono.orig/mono/mini/aot-runtime.c
-+++ mono/mono/mini/aot-runtime.c
+diff --git a/mono/mini/aot-runtime.c b/mono/mini/aot-runtime.c
+index 5e6fc01..98edaf1 100644
+--- a/mono/mini/aot-runtime.c
++++ b/mono/mini/aot-runtime.c
 @@ -54,6 +54,7 @@
  #include <mono/metadata/gc-internals.h>
  #include <mono/metadata/threads-types.h>
@@ -53,7 +65,7 @@ Index: mono/mono/mini/aot-runtime.c
  #include <mono/utils/mono-logger-internals.h>
  #include <mono/utils/mono-mmap.h>
  #include <mono/utils/mono-compiler.h>
-@@ -2168,8 +2169,8 @@ load_aot_module (MonoAssemblyLoadContext
+@@ -2168,8 +2169,8 @@ load_aot_module (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, gpointer
  			sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
  			if (sofile) {
  				found_aot_name = g_strdup (aot_name);
@@ -63,7 +75,7 @@ Index: mono/mono/mini/aot-runtime.c
  				g_free (err);
  			}
  			g_free (aot_name);
-@@ -2177,13 +2178,26 @@ load_aot_module (MonoAssemblyLoadContext
+@@ -2177,13 +2178,26 @@ load_aot_module (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, gpointer
  #ifndef PLATFORM_ANDROID
  		if (!sofile) {
  			char *basename = g_path_get_basename (assembly->image->name);
@@ -93,7 +105,7 @@ Index: mono/mono/mini/aot-runtime.c
  			g_free (aot_name);
  		}
  #endif
-@@ -2198,8 +2212,8 @@ load_aot_module (MonoAssemblyLoadContext
+@@ -2198,8 +2212,8 @@ load_aot_module (MonoAssemblyLoadContext *alc, MonoAssembly *assembly, gpointer
  				sofile = mono_dl_open (aot_name, MONO_DL_LAZY, &err);
  				if (sofile) {
  					found_aot_name = g_strdup (aot_name);

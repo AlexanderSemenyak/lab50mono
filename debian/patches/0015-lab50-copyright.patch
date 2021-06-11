@@ -1,0 +1,22 @@
+From: =?utf-8?b?0KjQu9GL0LrQvtCyINCS0LDRgdC40LvQuNC5?= <vash@lab50.net>
+Date: Fri, 11 Jun 2021 13:05:04 +0300
+Subject: =?utf-8?b?0JTQvtCx0LDQstC70LXQvdGLINGB0LLQtdC00LXQvdC40Y8g0L4g0LI=?=
+ =?utf-8?b?0LXRgNGB0LjQuA==?=
+
+---
+ mono/mini/driver.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mono/mini/driver.c b/mono/mini/driver.c
+index cd45862..108b45d 100644
+--- a/mono/mini/driver.c
++++ b/mono/mini/driver.c
+@@ -2144,7 +2144,7 @@ mono_main (int argc, char* argv[])
+ 			char *build = mono_get_runtime_build_info ();
+ 			char *gc_descr;
+ 
+-			g_print ("Mono JIT compiler version %s\nCopyright (C) 2002-2014 Novell, Inc, Xamarin Inc and Contributors. www.mono-project.com\n", build);
++			g_print ("Mono Runtime version %s\nCopyright (C) 2002-2014 Novell, Inc, Xamarin Inc and Contributors. www.mono-project.com\n© Лаборатория 50, 2020 (http://lab50.net)\n", build);
+ 			g_free (build);
+ 			char *info = mono_get_version_info ();
+ 			g_print (info);
