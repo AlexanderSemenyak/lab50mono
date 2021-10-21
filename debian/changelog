@@ -1,3 +1,9 @@
+mono (6.12.0.114-0labft18) testing; urgency=medium
+
+  * monodoc-manual переведен в рекомендуемые.
+
+ -- Лаборатория 50 <team@lab50.net>  Thu, 21 Oct 2021 14:40:00 +0300
+
 mono (6.12.0.114-0labft17) testing; urgency=medium
 
   * Пакет referenceassemblies-pcl заменен на mono-reference-assemblies-
