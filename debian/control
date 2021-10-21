@@ -147,13 +147,11 @@ Depends: ${misc:Depends},
          mono-csharp-shell (= ${source:Version}),
          mono-4.0-gac (= ${source:Version}),
          mono-4.0-service (= ${source:Version}),
-         monodoc-base (= ${source:Version}),
-         monodoc-manual (= ${source:Version}),
          libmono-cil-dev (= ${source:Version}),
 	 mono-reference-assemblies-cil,
          msbuild,
          ca-certificates-mono (= ${source:Version})
-Suggests: libmono-llvm (= ${binary:Version}) [armhf arm64]
+Suggests: libmono-llvm (= ${binary:Version}) [armhf arm64], monodoc-manual (= ${source:Version})
 Description: complete Mono runtime, development tools and all libraries
  Mono is a platform for running and developing applications based on the
  ECMA/ISO Standards. Mono is an open source effort led by Xamarin.
@@ -2280,7 +2278,9 @@ Provides: resource-file-generator,
 Recommends: mono-csharp-shell,
 	    mono-reference-assemblies-cil,
             msbuild,
-            mono-microsoft-net-compilers-toolset
+            mono-microsoft-net-compilers-toolset,
+            monodoc-base (= ${source:Version}),
+            monodoc-manual (= ${source:Version})
 Depends: ${misc:Depends},
          ${cli:Depends},
          mono-gac,
@@ -2374,7 +2374,7 @@ Description: shared MonoDoc binaries
 
 Package: monodoc-manual
 Build-Profiles: <!nodoc>
-Architecture: any
+Architecture: all
 Section: doc
 Depends: ${misc:Depends}, monodoc-browser | monodoc-http | monodoc-viewer
 Suggests: monodoc-gtk-manual,
