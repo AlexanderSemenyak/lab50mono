@@ -150,7 +150,7 @@ Depends: ${misc:Depends},
          monodoc-base (= ${source:Version}),
          monodoc-manual (= ${source:Version}),
          libmono-cil-dev (= ${source:Version}),
-         referenceassemblies-pcl,
+	 mono-reference-assemblies-cil,
          msbuild,
          ca-certificates-mono (= ${source:Version})
 Suggests: libmono-llvm (= ${binary:Version}) [armhf arm64]
@@ -2278,7 +2278,7 @@ Provides: resource-file-generator,
  assembly-linker,
  strong-name-tool
 Recommends: mono-csharp-shell,
-            referenceassemblies-pcl,
+	    mono-reference-assemblies-cil,
             msbuild,
             mono-microsoft-net-compilers-toolset
 Depends: ${misc:Depends},
@@ -2374,7 +2374,7 @@ Description: shared MonoDoc binaries
 
 Package: monodoc-manual
 Build-Profiles: <!nodoc>
-Architecture: all
+Architecture: any
 Section: doc
 Depends: ${misc:Depends}, monodoc-browser | monodoc-http | monodoc-viewer
 Suggests: monodoc-gtk-manual,
